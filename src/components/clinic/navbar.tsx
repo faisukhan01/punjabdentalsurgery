@@ -61,7 +61,7 @@ export function Navbar() {
         </button>
 
         {/* Desktop links */}
-        <ul className="hidden items-center gap-1 md:flex">
+        <ul className="hidden items-center gap-1 lg:flex">
           {NAV_LINKS.map((link) => (
             <li key={link.id}>
               <button
@@ -103,7 +103,7 @@ export function Navbar() {
               <Button
                 variant="outline"
                 size="icon"
-                className="size-10 rounded-xl md:hidden"
+                className="size-10 rounded-xl lg:hidden"
                 aria-label="Open menu"
               >
                 <Menu className="size-5" aria-hidden />

@@ -107,3 +107,23 @@ Work Log:
 Stage Summary:
 - Public site is now minimal and elegant: 1 video + 1 photo total, icon-based services, uniform spacing, no marquees/dark blocks/badges.
 - Booking system + admin panel (PIN 1234) unchanged and verified working after redesign.
+
+---
+
+Task ID: 7
+Agent: main (Z.ai Code)
+Task: Complete header redesign — user unhappy with hero bg video and header content
+
+Work Log:
+- Inspected old hero.mp4 frames (ffmpeg): cluttered counter with a bright red toothbrush on a fake teeth model — distracting and ugly; heavy teal overlay turned it into a dark murk.
+- Generated a new cinematic hero video via z-ai video CLI (cogvideox-3, quality mode, 1920x1080, 10s): bright luxurious white+teal dental clinic with chair, plants, marble floor — matches brand palette exactly (3 MB). Replaced /public/videos/hero.mp4 and regenerated /images/hero-poster.jpg from a clean frame.
+- Added getOpenStatus() to src/lib/clinic.ts — live open/closed state computed in Asia/Karachi time from the real session table (Mon-Thu/Sat 10-2 & 5-9, Fri 10-12:30 & 2:30-9, Sun closed); returns "Open now · closes 2:00 PM" / "Opens today at ..." / "Opens tomorrow at ..." style labels.
+- Rebuilt hero.tsx completely: airy light design instead of dark void. Frosted white gradient overlay (dark text side, video clearly visible right, uniform on <md); bottom fade into porcelain background.
+  - Left: "Rated 4.9" pill (amber star), serif H1 "Better care. Brighter smiles." (italic teal accent), doctor line, Urdu tagline, Book/Call CTAs, 3 icon trust items.
+  - Right: frosted-glass clinic card (bg-white/75 backdrop-blur-xl) — doctor avatar + name/creds, LIVE open/closed row with green OPEN badge (updates every 60s, hydration-safe via deferred setTimeout), address, full-width Book button.
+- Navbar breakpoint fix: links now lg:flex (was md:flex) — 768px no longer truncates the Book button.
+- Verified with agent-browser: desktop 1440 (header looks premium, card live status shows "Open now · closes 2:00 PM" + OPEN), mobile 390 (content + card stack cleanly), tablet 768 (navbar fixed, no truncation), booking modal opens from the new header card button, hero.mp4 streams 206, zero console/page errors. Lint 0/0.
+
+Stage Summary:
+- Header is now: bright AI-generated clinic video + frosted-glass layout + live open/closed status — the hero's most distinctive feature.
+- Poster fallback regenerated to match the new video's first impression.

@@ -85,3 +85,63 @@ export function isClosedDay(dateStr: string): boolean {
   const d = new Date(`${dateStr}T12:00:00.000Z`);
   return d.getUTCDay() === 0;
 }
+
+/* ---------- Live open/closed status (for the hero clinic card) ---------- */
+
+const DAY_SESSIONS: ReadonlyArray<ReadonlyArray<readonly [number, number]>> = [
+  [], // Sunday — closed
+  [[600, 840], [1020, 1260]], // Monday
+  [[600, 840], [1020, 1260]], // Tuesday
+  [[600, 840], [1020, 1260]], // Wednesday
+  [[600, 840], [1020, 1260]], // Thursday
+  [[600, 750], [870, 1260]], // Friday
+  [[600, 840], [1020, 1260]], // Saturday
+];
+
+const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+function formatMinutes(m: number): string {
+  const h24 = Math.floor(m / 60);
+  const min = m % 60;
+  const ampm = h24 >= 12 ? "PM" : "AM";
+  const h = h24 % 12 === 0 ? 12 : h24 % 12;
+  return `${h}:${String(min).padStart(2, "0")} ${ampm}`;
+}
+
+export interface OpenStatus {
+  open: boolean;
+  /** Human-readable status, e.g. "Open now · closes 2:00 PM". */
+  label: string;
+}
+
+/** Live open/closed state for the clinic, computed in Asia/Karachi time. */
+export function getOpenStatus(now: Date = new Date()): OpenStatus {
+  const k = new Date(now.getTime() + KARACHI_OFFSET_MS);
+  const day = k.getUTCDay();
+  const mins = k.getUTCHours() * 60 + k.getUTCMinutes();
+
+  const today = DAY_SESSIONS[day];
+
+  // Inside an open session right now?
+  for (const [start, end] of today) {
+    if (mins >= start && mins < end) {
+      return { open: true, label: `Open now · closes ${formatMinutes(end)}` };
+    }
+  }
+  // Opening later today?
+  for (const [start] of today) {
+    if (mins < start) {
+      return { open: false, label: `Opens today at ${formatMinutes(start)}` };
+    }
+  }
+  // Opening on a following day?
+  for (let i = 1; i <= 7; i++) {
+    const d = (day + i) % 7;
+    const next = DAY_SESSIONS[d];
+    if (next.length > 0) {
+      const when = i === 1 ? "tomorrow" : DAY_NAMES[d];
+      return { open: false, label: `Opens ${when} at ${formatMinutes(next[0][0])}` };
+    }
+  }
+  return { open: false, label: "Closed" };
+}
