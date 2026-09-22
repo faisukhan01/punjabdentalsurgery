@@ -1,0 +1,284 @@
+     1→# Worklog — Punjab Dental Surgery Website
+     2→
+     3→Shared worklog for all agents working on this project. Append new sections at the end.
+     4→
+     5→---
+     6→
+     7→Task ID: 1
+     8→Agent: main (Z.ai Code)
+     9→Task: Gather realistic dental assets (images + hero background video)
+    10→
+    11→Work Log:
+    12→- Ran 10 z-ai image-search queries (tooth decay, gum disease, whitening, braces, implants, root canal, kids dentistry, clinic interior, male dentist portrait, treatment scenes). Hit 429 rate-limits when parallel; re-ran sequentially with spacing.
+    13→- Visually verified candidates; rejected watermarked (Dreamstime) and competitor-branded (docbraces) images.
+    14→- Scraped Mixkit dental video listing (Pexels is bot-blocked) and verified 720p direct MP4s via curl HEAD.
+    15→- Generated AI assets with z-ai image: doctor portrait (teal clinic backdrop, no branding), modern clinic interior matching brand palette.
+    16→- Self-hosted everything under /public: images/ (doctor.png, clinic.png, clinic-room.jpg, treatment-room.jpg, tooth-decay.jpg, gum-disease.jpg, teeth-whitening.jpg, braces.jpg, implant.jpg, root-canal.jpg, kids-dentistry.jpg, patient-smile.jpg, hero-poster.jpg) and videos/hero.mp4 (Mixkit #39480, 720p, male dentist in bright clinic, 4.5 MB).
+    17→
+    18→Stage Summary:
+    19→- All visual assets are local under /public (no hotlink risk). Hero video = /videos/hero.mp4 with /images/hero-poster.jpg fallback.
+    20→- doctor.png is an AI-generated placeholder portrait — the clinic should replace it with a real photo of Dr. Muhammad Siddique.
+    21→
+    22→---
+    23→
+    24→Task ID: 2
+    25→Agent: main (Z.ai Code)
+    26→Task: Design Prisma schema and push to SQLite
+    27→
+    28→Work Log:
+    29→- Rewrote prisma/schema.prisma: removed scaffold User/Post models; added Appointment (name, phone, email?, service, date, timeSlot, message?, status PENDING|CONFIRMED|COMPLETED|CANCELLED, timestamps, indexes on date/status/createdAt) and Visit (sessionId, device mobile|desktop|tablet, createdAt, indexes).
+    30→- Kept schema SQLite-portable (no SQLite-only types) for future Turso (libSQL) migration.
+    31→- Ran `bun run db:push` — synced in 11ms, Prisma Client v6.19.2 generated.
+    32→
+    33→Stage Summary:
+    34→- DB at db/custom.db. Models ready for booking flow + visitor analytics.
+    35→
+    36→---
+    37→
+    38→Task ID: 3
+    39→Agent: main (Z.ai Code)
+    40→Task: Build backend API routes + shared libs
+    41→
+    42→Work Log:
+    43→- src/lib/clinic.ts: CLINIC info (name, doctor "Dr. Muhammad Siddique", BDS RDS, placeholder phone/address), TIME_SLOTS (16 slots matching clinic hours), SERVICE_NAMES (11 services), APPOINTMENT_STATUSES, Asia/Karachi timezone helpers (clinicTodayStr, clinicDayStartUTC, isClosedDay — Sundays closed).
+    44→- src/lib/admin.ts: PIN gate helper (x-admin-pin header vs ADMIN_PIN env, default "1234").
+    45→- src/app/api/appointments/route.ts: POST create booking (zod v4 validation, past-date/Sunday rejection, double-booking 409 guard) + GET admin list (status/search/date filters, pagination, status counts).
+    46→- src/app/api/appointments/[id]/route.ts: PATCH status (admin), DELETE (admin).
+    47→- src/app/api/appointments/availability/route.ts: GET taken slots for a date (public, exposes slot labels only).
+    48→- src/app/api/visits/route.ts: POST visit event (anon sessionId; device parsed from User-Agent).
+    49→- src/app/api/admin/verify/route.ts: POST PIN check.
+    50→- src/app/api/admin/stats/route.ts: GET dashboard aggregate — appointment totals/status counts/today bookings/7-day series/top services + visit totals/unique/7-day series/device split + 8 recent appointments. All day-window math in clinic TZ.
+    51→- Smoke-tested all 9 scenarios with curl: create OK, duplicate slot 409, availability OK, visit tracked (mobile UA detected), bad PIN 401, good PIN OK, stats OK, admin list OK, PATCH status OK.
+    52→- Design foundation: globals.css rewritten with teal/porcelain/amber brand tokens, Fraunces display + Plus Jakarta Sans fonts, marquee/float/pulse keyframes, scrollbar-thin/bg-dots utilities. layout.tsx updated (fonts, metadata, viewport themeColor).
+    53→
+    54→Stage Summary:
+    55→- API contract (frontend must use relative URLs):
+    56→  - POST /api/appointments {name, phone, email?, service, date "YYYY-MM-DD", timeSlot, message?} → 201 {ok, appointment} | 400/409 {error}
+    57→  - GET /api/appointments/availability?date= → {closed, past, taken: string[]}
+    58→  - GET /api/appointments?status=&q=&date=&page= (admin header x-admin-pin) → {appointments, total, counts}
+    59→  - PATCH /api/appointments/[id] {status} (admin) | DELETE (admin)
+    60→  - POST /api/visits {sessionId} → 201 {ok}
+    61→  - POST /api/admin/verify {pin} → {ok} | 401
+    62→  - GET /api/admin/stats (admin) → appointments{total,PENDING,CONFIRMED,COMPLETED,CANCELLED,todayBookings,todaysAppointments,last7days,topServices}, visits{total,unique,today,todayUnique,last7days,devices}, recentAppointments[8]
+    63→  - Admin PIN default: "1234" (ADMIN_PIN env). Frontend sends it via "x-admin-pin" header.
+    64→
+    65→---
+    66→
+    67→Task ID: 4-5
+    68→Agent: full-stack-developer
+    69→Task: Build complete public website (Task 4) + admin panel (Task 5) frontend on the Task 3 API contract
+    70→
+    71→Work Log:
+    72→- Created zustand store `src/components/clinic/store.ts` (bookingOpen, preselectedService, view 'site'|'admin', openBooking/closeBooking/setView) so navbar, footer, hero, service/problem cards and the mobile sticky bar all trigger booking/view switches without prop drilling.
+    73→- Shared helpers `src/components/clinic/reveal.tsx`: Reveal (framer-motion whileInView fade/slide, once), SectionHeading (uppercase tracking-widest teal kicker + font-display title with italic accent), CountUp (useInView + animate count-up).
+    74→- page.tsx rewritten as 'use client' switch: renders SiteView or AdminPanel from the store + visit-tracker effect (localStorage `pds_vid` UUID, sessionStorage `pds_visit_ts` 30-min throttle, fire-and-forget POST /api/visits).
+    75→- Site chrome: TopBar (deep teal strip: phone/address/Sun-closed/Urdu tagline, hidden sm:flex), Navbar (sticky glass bg-white/80 backdrop-blur, teal rounded-2xl Sparkles logo + wordmark, desktop smooth-scroll links, ShieldCheck admin icon-button, Book button, mobile Sheet with links + both actions), Footer (teal-950, 4 cols incl. clickable quick links/services that openBooking(service), hours, Urdu tagline, sticky via mt-auto), FloatingActions (green WhatsApp float bottom-[92px] md:bottom-6 with ping ring + mobile-only sticky bottom bar with safe-area padding; main content gets pb-[76px] md:pb-0).
+    76→- Sections built (all with scroll-mt ids): Hero (min-h-[100svh], /videos/hero.mp4 + hero-poster, teal-950/90 gradient + bg-grain, staggered entrance, H1 "Your Smile Deserves *Expert Care*", Urdu tagline dir=rtl, Call/Book CTAs, 3 trust chips, scroll indicator), StatsBar (white rounded-3xl overlap -mt-10, 4 CountUp stats), Services (8 cards grid-cols-2 lg:grid-cols-4, image hover zoom, per-service Book →), Marquee (teal-800 animate-marquee duplicated list with Sparkles separators), Dental Problems (dark teal-950 rounded-[2.5rem] showcase: decay/gum/stains cards with symptom bullets, "We treat it with" line, ghost Book Treatment buttons), Clinic/About (mint bg-dots, clinic.png + clinic-room.jpg collage, animate-float "Fully Sterilized" badge, 4 feature bullets, receipt-style dashed Hours card from CLINIC.hours), Doctor (offset teal frame portrait doctor.png, credentials chips, amber-accent Urdu signature card, Book with Dr. Siddique), WhyUs (4 icon cards), Testimonials (6 Pakistani-named cards, amber stars, mobile snap-x no-scrollbar swipe / desktop grid-cols-3), Contact (teal gradient rounded-[2.5rem] urgency banner + phone/WhatsApp/address/hours/Find-us cards with Google Maps deep link).
+    77→- BookingModal (src/components/clinic/booking-modal.tsx): Dialog w-[95vw] max-w-lg max-h-[92svh] scrollbar-thin rounded-3xl; 4-step wizard with animated progress bar + step labels (Service → Date & Time → Details → Done) and direction-aware AnimatePresence slides (AnimatePresence custom={dir} variants). Step 1: SERVICE_NAMES 2-col chips (min-h-44px, check when selected); preselected service jumps straight to step 2. Step 2: date input min=clinicTodayStr() max=+30d, GET availability on change (loading skeletons), amber Sunday/past notices, fully-booked notice, Morning(8)/Evening(8) slot grids — taken slots disabled with strikethrough "Booked" label. Step 3: summary chip line + validated form (name, tel phone >=10 digits, optional email regex, optional message) + inline error banner. Submit POST /api/appointments: 409 → clear slot, refetch availability, jump back to step 2, destructive toast "That slot was just booked"; error → banner; 201 → step 4. Step 4: spring CheckCircle2, summary card (date-fns "EEEE, d MMM yyyy"), "arrive 10 minutes early", Done + Book Another (resets to step 1). Success toast via use-toast; full state reset on every open.
+    78→- AdminPanel (src/components/clinic/admin/): types.ts (AdminAppointment/AdminStats interfaces + adminFetch wrapper attaching x-admin-pin + 401 → onUnauthorized callback, status label/badge maps), PinGate (Lock icon card, 4-slot InputOTP, auto-submits on 4th digit, wrong PIN → framer-motion shake + red hint, POST /api/admin/verify, verified PIN persisted in sessionStorage pds_admin_pin), AdminPanel shell (restores/verifies stored PIN on mount, Logout, sticky teal-950 header with Refresh + Back to Website).
+    79→- OverviewTab: 11 stat cards (2-col mobile/4-col desktop, CountUp, amber/teal/green/red tints; Mobile Share %), Recharts Bookings BarChart (teal, rounded-[8,8,0,0]) + Visits/Unique AreaChart (teal+amber gradients), Top Services with Progress bars, Recent Bookings mini-list with status badges; stats state lives in the shell, auto-refresh 60s + manual refresh everywhere.
+    80→- AppointmentsTab: status filter chips with live counts, 400ms debounced search (q), date filter with clear, server pagination (Prev/Next + Page X of Y); mobile stacked cards (expandable messages, tel: links) / desktop Table; DropdownMenu actions Confirm/Complete/Cancel (PATCH) + Delete behind AlertDialog; toasts + list refetch + parent stats refetch after mutations; sequence-guarded fetches (fetchIdRef) prevent out-of-order overwrites; skeletons + Inbox empty state.
+    81→- VisitorsTab: 4 stat cards (Total/Unique/Today/TodayUnique), shared VisitsChart, 3 device cards (Smartphone/Monitor/Tablet with % of total), amber "how tracking works" note card.
+    82→- Strict-rule compliance: restructured all effect data-fetching to .then-callback setState patterns (react-hooks/set-state-in-effect), removed ref-writes-during-render (react-hooks/refs); lint = 0 errors / 0 warnings. All fetches relative URLs; no blue/indigo; light theme; touch targets >= 44px; images plain <img> with alt + lazy.
+    83→
+    84→Stage Summary:
+    85→- Tasks 4+5 complete. Frontend is 100% wired to the Task 3 API contract; nothing in prisma/, api/, globals.css, layout.tsx, lib/clinic.ts, lib/admin.ts, lib/db.ts was modified.
+    86→- Component tree: page.tsx → (visit tracker) → SiteView (TopBar, Navbar, Hero, StatsBar, Services, Marquee, Problems, About, Doctor, WhyUs, Testimonials, Contact, Footer, FloatingActions, BookingModal) | AdminPanel (PinGate → AdminShell: Tabs[OverviewTab, AppointmentsTab, VisitorsTab]).
+    87→- Booking wizard: Service → Date & Time (availability-fetched) → Details → Done; 409 auto-recovery back to slot grid; preselectedService from any "Book" CTA.
+    88→- Admin: PIN 1234 gate (sessionStorage), overview w/ 60s auto-refresh, appointments CRUD filters, visitors analytics; any 401 returns cleanly to the PIN gate.
+    89→- Verification: bun run lint clean; tsc --noEmit clean for all src files (only pre-existing examples/ + skills/ errors remain, outside the app); dev.log shows clean compiles and GET / 200.
+    90→- Note for the clinic: doctor.png is an AI placeholder (replace with a real photo), and phone/address in src/lib/clinic.ts are placeholders (replace before going live).
+    91→
+    92→---
+    93→
+    94→Task ID: 6
+    95→Agent: main (Z.ai Code)
+    96→Task: Complete redesign of public website — user complained it was messy, ugly, too many images
+    97→
+    98→Work Log:
+    99→- Deleted 9 cluttered section components: top-bar, stats-bar, marquee, problems, why-us, doctor, old about/contact/testimonials/services/hero/navbar/footer.
+   100→- Rebuilt public site with 5 minimal sections: Navbar → Hero (video) → Services (icon grid, ZERO images) → About (single doctor portrait + hours card) → Reviews (3 text cards) → Contact (3 info cards + one CTA banner) → Footer. One accent colour, consistent max-w-6xl container, generous py-20/28 whitespace.
+   101→- Removed all dental-disease/collage images from the page (only doctor.png remains). Deleted bg-dots/bg-grain/marquee/float/pulse CSS; pin-gate switched to bg-secondary/40.
+   102→- Hero simplified: one kicker, one H1, one line, Urdu tagline, 2 CTAs, single dot-separated trust line. Removed chips/grain/scroll-indicator clutter.
+   103→- Mobile fixes: navbar Book button hidden below sm (sticky bottom bar covers it); footer inner pb-[92px] md:pb-12 so Admin link clears the fixed mobile bar.
+   104→- Verified with agent-browser: mobile (390x844) full scroll — hero/services/about/reviews/contact/footer all clean; desktop (1440x900) hero + services + about; booking golden path E2E (service card → slot 10:30 AM → details → confirmed 201, toast shown); admin PIN gate + overview stats + charts render with data; zero console errors; lint 0/0.
+   105→- Deleted the E2E test booking via admin API to keep dashboard clean.
+   106→
+   107→Stage Summary:
+   108→- Public site is now minimal and elegant: 1 video + 1 photo total, icon-based services, uniform spacing, no marquees/dark blocks/badges.
+   109→- Booking system + admin panel (PIN 1234) unchanged and verified working after redesign.
+   110→
+   111→---
+   112→
+   113→Task ID: 7
+   114→Agent: main (Z.ai Code)
+   115→Task: Complete header redesign — user unhappy with hero bg video and header content
+   116→
+   117→Work Log:
+   118→- Inspected old hero.mp4 frames (ffmpeg): cluttered counter with a bright red toothbrush on a fake teeth model — distracting and ugly; heavy teal overlay turned it into a dark murk.
+   119→- Generated a new cinematic hero video via z-ai video CLI (cogvideox-3, quality mode, 1920x1080, 10s): bright luxurious white+teal dental clinic with chair, plants, marble floor — matches brand palette exactly (3 MB). Replaced /public/videos/hero.mp4 and regenerated /images/hero-poster.jpg from a clean frame.
+   120→- Added getOpenStatus() to src/lib/clinic.ts — live open/closed state computed in Asia/Karachi time from the real session table (Mon-Thu/Sat 10-2 & 5-9, Fri 10-12:30 & 2:30-9, Sun closed); returns "Open now · closes 2:00 PM" / "Opens today at ..." / "Opens tomorrow at ..." style labels.
+   121→- Rebuilt hero.tsx completely: airy light design instead of dark void. Frosted white gradient overlay (dark text side, video clearly visible right, uniform on <md); bottom fade into porcelain background.
+   122→  - Left: "Rated 4.9" pill (amber star), serif H1 "Better care. Brighter smiles." (italic teal accent), doctor line, Urdu tagline, Book/Call CTAs, 3 icon trust items.
+   123→  - Right: frosted-glass clinic card (bg-white/75 backdrop-blur-xl) — doctor avatar + name/creds, LIVE open/closed row with green OPEN badge (updates every 60s, hydration-safe via deferred setTimeout), address, full-width Book button.
+   124→- Navbar breakpoint fix: links now lg:flex (was md:flex) — 768px no longer truncates the Book button.
+   125→- Verified with agent-browser: desktop 1440 (header looks premium, card live status shows "Open now · closes 2:00 PM" + OPEN), mobile 390 (content + card stack cleanly), tablet 768 (navbar fixed, no truncation), booking modal opens from the new header card button, hero.mp4 streams 206, zero console/page errors. Lint 0/0.
+   126→
+   127→Stage Summary:
+   128→- Header is now: bright AI-generated clinic video + frosted-glass layout + live open/closed status — the hero's most distinctive feature.
+   129→- Poster fallback regenerated to match the new video's first impression.
+   130→
+   131→---
+   132→
+   133→Task ID: 8
+   134→Agent: main (Z.ai Code)
+   135→Task: Header v3 — user rejected empty-room AI video + "vibe coded" glass-card layout; wanted tooth-treatment footage (no doctor face) and a professional layout
+   136→
+   137→Work Log:
+   138→- Scraped Mixkit dentist listing, downloaded 10 candidate clips (360p), extracted frames and visually compared grids. Selected two real footage clips: 6609 (macro of dental instruments, dentist working blurred in background — zero faces) and 12295 (treatment close-up, gloved mirror+probe in patient's mouth — no doctor face).
+   139→- Fetched 720p versions (6609: 14.4s, 12295: 16.7s) and composed a 14s seamless loop with ffmpeg xfade: instruments macro (8s) → 1s crossfade → treatment close-up (6s) → 1s crossfade back to instruments start. libx264 crf27 veryfast, no audio, faststart → only 0.84 MB. Replaced /public/videos/hero.mp4; regenerated hero-poster.jpg from frame 0.
+   140→- Navbar: now FIXED over the video, scroll-aware — transparent with white text + white-glass Book button + subtle top scrim at page top; solid porcelain bar (bg-background/85 blur, dark text, teal button) after 32px scroll. All colors switch via scrolled state; listener passive + deferred initial check (lint-safe).
+   141→- Hero: removed EVERYTHING that looked AI-generated (rating pill, frosted glass clinic card, icon trust row, white gradient). New editorial design:
+   142→  - Bottom-left anchored copy: hairline + small-caps kicker "PUNJAB DENTAL SURDUERY" (tracking 0.3em), giant serif H1 "Gentle hands. / Healthier smiles." with teal-200 italic accent, doctor line, Urdu tagline shrink-wrapped left (flex wrapper fixed the rtl full-width drift), single white CTA + underlined phone text link.
+   143→  - Cinematic scrim: bottom-heavy teal-950 gradient + left bias — text always legible, footage visible.
+   144→  - Bottom hairline strip (full-width, border-t white/15, bg-teal-950/35 blur): live open status with pulsing emerald dot | address (sm+) | phone (tel link). Small-caps 11px tracking 0.16em, thin dividers. Mobile: stacks as 2 clean rows (status/phone), address hidden.
+   145→- Fixed in verification loop: Urdu line full-width rtl drift → flex shrink-wrap; mobile status wrap → stacked rows.
+   146→- Verified: desktop 1440 top + scrolled states, mobile 390 (hero + strip rows), booking modal opens from white CTA, 0 console errors. Lint 0/0.
+   147→
+   148→Stage Summary:
+   149→- Header now: real tooth-treatment footage (no doctor faces, seamless 14s loop, <1MB) + editorial typography + hairline live-status strip + scroll-aware navbar. No cards/pills/icon-rows = no more "AI template" look.
+   150→
+   151→---
+   152→
+   153→Task ID: 9
+   154→Agent: main (Z.ai Code)
+   155→Task: Rebrand site color theme from green/teal to "Red Ribbons" red theme (per user screenshot)
+   156→
+   157→Work Log:
+   158→- User confirmed header bg video is now perfect; requested ONLY a theme change from green to the Red Ribbons red palette (deep crimson primary, warm ivory background, warm beige accents). Explicitly said "don't do anything else".
+   159→- Rewrote globals.css :root tokens: --primary oklch(0.47 0.17 27) deep crimson (#9c1c23-ish), --background warm ivory oklch(0.972 0.012 50), --secondary soft blush, --accent warm beige, updated border/ring/charts/selection/scrollbar hues; .dark block hue-swapped for completeness.
+   160→- Updated layout.tsx viewport themeColor #0f766e → #9c1c23.
+   161→- Swapped hardcoded teal classes to red across public components: navbar (scrim gradient, Book button), footer (bg-red-950 family), hero (red-950 scrims, red-200 italic accent, info strip), reveal (red-300 dark kicker), contact (bg-red-900 CTA banner), floating-actions (WhatsApp float green-500 → red-700 + red shadows).
+   162→- Admin: admin-panel header → red-950; CONFIRMED badge/legend tint → red; charts.tsx TEAL const → RED #b91c1c (bars, area stroke, fills, tooltip cursor); batch sed-replaced all rgb(13,148,136,*) teal-tinted shadows → rgb(156,28,35,*) across services, pin-gate, appointments-tab, visitors-tab, overview-tab, booking-modal; booking step "done" color → red-600.
+   163→- Kept semantic colors untouched: emerald "open now" dot, green success check/completed badges, amber pending/warnings/stars.
+   164→- bun run lint: zero warnings. Browser-verified via agent-browser at 1440px and 390px: hero, services, about, contact, footer, booking modal (service→date step, slots load), admin PIN gate + dashboard (PIN 1234) — all render in the new red theme; zero console errors/page errors.
+   165→
+   166→Stage Summary:
+   167→- Entire site (public + admin) now uses the Red Ribbons inspired crimson/ivory/beige palette; brand tokens centralized in globals.css.
+   168→- No layout, video, content, or logic changes — color swap only, as requested.
+   169→- Database still SQLite pending user's Turso credentials.
+   170→
+   171→---
+   172→
+   173→Task ID: 10
+   174→Agent: main (Z.ai Code)
+   175→Task: Header copy redesign (no doctor mention), remove red scrim from video, migrate DB to Turso, push code to GitHub
+   176→
+   177→Work Log:
+   178→- Hero copy rewritten per user request: removed the doctor line entirely; new H1 "Gentle dentistry. Beautiful smiles." with red-200 italic accent; sub now "Honest, painless dental care for your whole family — from routine checkups to braces and implants."; Urdu motto kept. Navbar subtitle swapped from "Dr. Muhammad Siddique · BDS, RDS" to clinic tagline "Your smile, our responsibility".
+   179→- Removed the red-950 gradient overlays ("red shield") from the hero video; replaced with neutral black scrims (bottom from-black/80 via-black/30, top h-36 from-black/45) so footage renders naturally while text stays legible. Info strip bg → black/40.
+   180→- Turso migration: installed @prisma/adapter-libsql@6.19.3 + @libsql/client@0.18.0; aligned prisma/@prisma/client to 6.19.3. Adapter v6 API takes a config object (factory pattern) — confirmed via d.ts. Rewrote src/lib/db.ts: PrismaClient({ adapter: new PrismaLibSQL({ url, authToken }) }) when TURSO_DATABASE_URL is set, local SQLite fallback otherwise. Added TURSO_DATABASE_URL/TURSO_AUTH_TOKEN to .env (gitignored, never pushed).
+   181→- Schema + data: generated DDL via prisma migrate diff; scripts/turso-init.ts (idempotent) created tables on Turso and copied 15 appointments + 83 visits from local SQLite.
+   182→- E2E verified against Turso: availability slots show booked states; booked "General Dental Checkup / 5:00 PM" via UI (201), row confirmed in Turso, Visit count 83→84; deleted test booking via admin DELETE API (x-admin-pin). Restarted dev server (setsid pattern) — stable.
+   183→- Git: untracked .env, db/custom.db and 14 unused root media assets (~20MB) before pushing; two commits authored as faisukhan01 <faisukhan01@users.noreply.github.com> (counts on contribution graph): "Redesign hero…" (34b704e) and "Integrate Turso…" (15d3157). Pushed main to github.com/faisukhan01/punjabdentalsurgery (repo was empty; new branch). Verified pushed tree contains 0 secret files.
+   184→- Lint: 0 warnings. Final browser smoke test: no page errors, Turso-backed pages load.
+   185→
+   186→Stage Summary:
+   187→- Header now: clear video (no red tint), no doctor mention anywhere in header, tighter copy.
+   188→- Production DB is Turso (libsql://fskedu-ai-faisukhan01.aws-ap-south-1.turso.io) via Prisma driver adapter; local SQLite kept as dev fallback.
+   189→- Code live on GitHub at faisukhan01/punjabdentalsurgery (main). Turso token and env files are NOT in the repo — user must configure env vars on their own host.
+   190→
+   191→---
+   192→Task ID: 10
+   193→Agent: Z.ai Code (main)
+   194→Task: Logo bg removal + UI polish (hero/about/reviews/CTA/footer) + Turso verification + GitHub push + Vercel env
+   195→
+   196→Work Log:
+   197→- Removed logo background via sharp threshold+alpha-ramp script (scripts/logo-prepare.ts); exported public/logo.png (500x512) and src/app/icon.png favicon
+   198→- Navbar/hero/footer now use the real logo image; replaced inline tooth SVG
+   199→- Hero: added logo mark, kicker with hairline, "Gentle dentistry," white + "beautiful smiles." ivory italic Fraunces, shortened subtitle, styled Urdu line
+   200→- About: removed Clinic Hours card (moved to footer per user request), fixed leftover teal-tinted shadow
+   201→- Reviews: rebuilt as 6-testimonial infinite marquee (globals.css keyframes, pause on hover, edge fade mask, reduced-motion safe) + 5.0 rating badge
+   202→- CTA: deep crimson gradient card with glows, hairline ring, logo watermark, Urdu tagline
+   203→- Footer: clean 4-column layout (brand+logo / explore / contact / clinic hours at the end)
+   204→- Turso verified: schema present, 15 appointments + 85 visits; POST /api/appointments 201 writes to remote; admin verify + stats 200 with x-admin-pin; test rows cleaned
+   205→- package.json build -> "prisma generate && next build" for Vercel
+   206→- Git: untracked sandbox junk (.zscripts, Caddyfile, tests, examples, download, upload, worklog, stray root media), extended .gitignore, pushed 2 commits to github.com/faisukhan01/punjabdentalsurgery main
+   207→- Browser verified at 1440 + 390: hero, about, reviews marquee, CTA, footer, booking E2E (confirmed), admin PIN 1234 dashboard, 0 console/page errors
+   208→
+   209→Stage Summary:
+   210→- Vercel env vars: TURSO_DATABASE_URL + TURSO_AUTH_TOKEN (+ optional ADMIN_PIN, default 1234)
+   211→- All data now lives in Turso (libsql://fskedu-ai-faisukhan01.aws-ap-south-1.turso.io); local SQLite fallback only if TURSO_DATABASE_URL missing
+   212→- Repo pushed through commit ef3e520; contribution graph updated
+   213→
+   214→---
+   215→Task ID: 11
+   216→Agent: Z.ai Code (main)
+   217→Task: Remove hero logo mark, theme-red "beautiful smiles.", update Vercel
+   218→
+   219→Work Log:
+   220→- Removed logo mark block from hero.tsx (navbar brand icon kept — standard UX)
+   221→- Changed hero em accent from amber-50/95 to oklch(0.66 0.19 27) — vivid crimson in brand hue, readable on dark video
+   222→- Lint clean; commit 178cc37 pushed → Vercel auto-deployed
+   223→- Live verified: hero logo gone, red accent live, site 200, hero screenshot checked
+   224→- Live booking API still 500 → TURSO env vars still not configured on user's Vercel project (user action required)
+   225→
+   226→Stage Summary:
+   227→- Design updates fully live on punjabdentalsurgery.vercel.app
+   228→- Pending user: add TURSO_DATABASE_URL / TURSO_AUTH_TOKEN / ADMIN_PIN in Vercel settings + redeploy to fix DB APIs
+   229→
+   230→---
+   231→Task ID: 12
+   232→Agent: Z.ai Code (main)
+   233→Task: "beautiful smiles." in exact logo red + real doctor photo (edited to site aesthetic, face preserved) in About + update Vercel
+   234→
+   235→Work Log:
+   236→- Sampled logo crimson via sharp (scripts/sample-logo-red.ts): vivid #9a2328, highlights #a92e32 → lifted same hue to #c2323b for dark-video readability
+   237→- hero.tsx: em accent changed from oklch(0.66 0.19 27) to text-[#c2323b] (exact logo crimson family)
+   238→- Edited uploaded doctor photo via image-edit SDK (scripts/edit-doctor.ts, 864x1152): face/mustache/hairline preserved 1:1, black blazer → crisp white dentist coat, arms-crossed professional pose, ivory clinic bg with crimson dental chair (2 variations generated, picked the closer face match)
+   239→- Installed as public/images/doctor.png; about.tsx frame ratio 4/5 → 3/4 (native image ratio, no crop)
+   240→- Lint clean; browser-verified hero+about at 1440 and 390 viewports, 0 console errors
+   241→- Commit dbc99f1 pushed → Vercel deployed; verified prod: /images/doctor.png 200 (44552 B), #c2323b in deployed CSS, prod hero+about screenshots confirmed
+   242→- Prod POST /api/appointments: validation OK (400s on bad payload) but DB insert still 500 → TURSO env vars still missing on Vercel (user action required)
+   243→
+   244→Stage Summary:
+   245→- Hero accent now exact logo crimson; real doctor portrait live in About on production
+   246→- Booking API healthy up to validation; only the Turso env vars block DB writes on Vercel
+   247→- Vercel needs: TURSO_DATABASE_URL=libsql://fskedu-ai-faisukhan01.aws-ap-south-1.turso.io + TURSO_AUTH_TOKEN (from .env) + ADMIN_PIN=1234 (optional, code defaults to 1234), then Redeploy
+   248→
+   249→---
+   250→Task ID: 13
+   251→Agent: Z.ai Code (main)
+   252→Task: Remove doctor pic from About section + update Vercel
+   253→
+   254→Work Log:
+   255→- Rewrote about.tsx without the portrait figure: single-column editorial layout (max-w-3xl), proof points as 2-col quiet cards (border + bg-card/60 + check chips) on sm+, stacked on mobile
+   256→- Verified no other references to /images/doctor.png (only about.tsx had one)
+   257→- git rm public/images/doctor.png (44 KB asset removed from repo)
+   258→- Lint clean; browser-verified About at 1440 + 390 viewports, 0 console errors
+   259→- Commit b93e94f pushed → Vercel auto-deployed
+   260→- Production verified: homepage 200, /images/doctor.png now 404, 0 references in live HTML, prod screenshot of About confirmed photo-free layout
+   261→
+   262→Stage Summary:
+   263→- About section is now text-only editorial on production; doctor photo asset fully removed from repo and CDN
+   264→- Still pending user action: Turso env vars on Vercel (booking API DB path remains 500 until added + redeploy)
+   265→
+   266→---
+   267→Task ID: 14
+   268→Agent: Z.ai Code (main)
+   269→Task: Real clinic contact details + daily 5PM-12AM hours + hide admin from UI (direct /admin URL only) + update Vercel
+   270→
+   271→Work Log:
+   272→- clinic.ts: phone +92 333 4313672 (tel: + WhatsApp links), address "Johar Town, Lahore", hours Everyday 5:00 PM - 12:00 AM, TIME_SLOTS now 5:00 PM - 11:30 PM (14 slots), DAY_SESSIONS all days [1020,1440], isClosedDay always false, formatMinutes handles midnight (1440 -> "12:00 AM")
+   273→- API enum auto-updated via z.enum(TIME_SLOTS); closed-day error messages made generic (route + booking modal)
+   274→- Navbar: removed admin lock button; Footer: replaced Admin Panel button with "Open everyday - 5:00 PM - 12:00 AM" note
+   275→- AdminPanel: "Back to Website" now navigates to "/" (store view no longer used for admin)
+   276→- NEW src/app/admin/page.tsx: /admin route renders AdminPanel directly, metadata robots noindex
+   277→- Lint clean; browser-verified: hero strip (new phone/address/status "OPENS TODAY AT 5:00 PM"), footer hours, booking modal slots 5:00-11:30 PM (6:30 PM correctly shown taken from local test data), /admin PIN gate -> dashboard (15 appts / 99 visits) -> Back to Website -> "/"
+   278→- Commit 37d5ca8 pushed -> Vercel deployed; prod homepage 200 with new phone+address, /admin 200
+   279→- Prod probe POST /api/appointments with "11:30 PM" passed validation (proves new deploy) but DB insert still 500 -> Turso env vars still missing on Vercel (user action required, 3rd reminder)
+   280→
+   281→Stage Summary:
+   282→- All real clinic details live on production; admin panel invisible on public UI, accessible only via /admin URL + PIN 1234
+   283→- Booking DB writes on Vercel remain blocked until user adds TURSO_DATABASE_URL + TURSO_AUTH_TOKEN (+ optional ADMIN_PIN) and redeploys
+   284→
