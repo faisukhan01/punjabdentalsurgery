@@ -127,3 +127,23 @@ Work Log:
 Stage Summary:
 - Header is now: bright AI-generated clinic video + frosted-glass layout + live open/closed status — the hero's most distinctive feature.
 - Poster fallback regenerated to match the new video's first impression.
+
+---
+
+Task ID: 8
+Agent: main (Z.ai Code)
+Task: Header v3 — user rejected empty-room AI video + "vibe coded" glass-card layout; wanted tooth-treatment footage (no doctor face) and a professional layout
+
+Work Log:
+- Scraped Mixkit dentist listing, downloaded 10 candidate clips (360p), extracted frames and visually compared grids. Selected two real footage clips: 6609 (macro of dental instruments, dentist working blurred in background — zero faces) and 12295 (treatment close-up, gloved mirror+probe in patient's mouth — no doctor face).
+- Fetched 720p versions (6609: 14.4s, 12295: 16.7s) and composed a 14s seamless loop with ffmpeg xfade: instruments macro (8s) → 1s crossfade → treatment close-up (6s) → 1s crossfade back to instruments start. libx264 crf27 veryfast, no audio, faststart → only 0.84 MB. Replaced /public/videos/hero.mp4; regenerated hero-poster.jpg from frame 0.
+- Navbar: now FIXED over the video, scroll-aware — transparent with white text + white-glass Book button + subtle top scrim at page top; solid porcelain bar (bg-background/85 blur, dark text, teal button) after 32px scroll. All colors switch via scrolled state; listener passive + deferred initial check (lint-safe).
+- Hero: removed EVERYTHING that looked AI-generated (rating pill, frosted glass clinic card, icon trust row, white gradient). New editorial design:
+  - Bottom-left anchored copy: hairline + small-caps kicker "PUNJAB DENTAL SURDUERY" (tracking 0.3em), giant serif H1 "Gentle hands. / Healthier smiles." with teal-200 italic accent, doctor line, Urdu tagline shrink-wrapped left (flex wrapper fixed the rtl full-width drift), single white CTA + underlined phone text link.
+  - Cinematic scrim: bottom-heavy teal-950 gradient + left bias — text always legible, footage visible.
+  - Bottom hairline strip (full-width, border-t white/15, bg-teal-950/35 blur): live open status with pulsing emerald dot | address (sm+) | phone (tel link). Small-caps 11px tracking 0.16em, thin dividers. Mobile: stacks as 2 clean rows (status/phone), address hidden.
+- Fixed in verification loop: Urdu line full-width rtl drift → flex shrink-wrap; mobile status wrap → stacked rows.
+- Verified: desktop 1440 top + scrolled states, mobile 390 (hero + strip rows), booking modal opens from white CTA, 0 console errors. Lint 0/0.
+
+Stage Summary:
+- Header now: real tooth-treatment footage (no doctor faces, seamless 14s loop, <1MB) + editorial typography + hairline live-status strip + scroll-aware navbar. No cards/pills/icon-rows = no more "AI template" look.
