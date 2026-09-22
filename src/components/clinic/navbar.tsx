@@ -97,7 +97,7 @@ export function Navbar() {
                 scrolled ? "text-muted-foreground" : "text-white/60"
               )}
             >
-              {CLINIC.doctor} · {CLINIC.qualifications}
+              {CLINIC.tagline}
             </span>
           </span>
         </button>

@@ -55,13 +55,13 @@ export function Hero() {
       >
         <source src="/videos/hero.mp4" type="video/mp4" />
       </video>
-      {/* Cinematic scrim — deepest where the text sits */}
+      {/* Neutral cinematic scrim — light touch, video stays clear */}
       <div
-        className="absolute inset-0 bg-gradient-to-t from-red-950/95 via-red-950/45 to-red-950/25"
+        className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"
         aria-hidden
       />
       <div
-        className="absolute inset-0 bg-gradient-to-r from-red-950/65 via-red-950/25 to-transparent"
+        className="absolute inset-x-0 top-0 h-36 bg-gradient-to-b from-black/45 to-transparent"
         aria-hidden
       />
 
@@ -84,16 +84,16 @@ export function Hero() {
           variants={item}
           className="mt-5 max-w-2xl font-display text-[2.75rem] font-semibold leading-[1.05] text-balance text-white sm:text-6xl lg:text-[4.25rem]"
         >
-          Gentle hands.{" "}
-          <em className="font-medium italic text-red-200">Healthier smiles.</em>
+          Gentle dentistry.{" "}
+          <em className="font-medium italic text-red-200">Beautiful smiles.</em>
         </motion.h1>
 
         <motion.p
           variants={item}
           className="mt-5 max-w-lg text-base leading-relaxed text-white/75 sm:text-lg"
         >
-          {CLINIC.doctor} ({CLINIC.qualifications}) — honest, painless dentistry for your whole
-          family.
+          Honest, painless dental care for your whole family — from routine checkups to braces and
+          implants.
         </motion.p>
 
         <motion.div variants={item} className="mt-2.5 flex">
@@ -129,7 +129,7 @@ export function Hero() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 1.1, duration: 0.8 }}
-        className="absolute inset-x-0 bottom-0 z-10 border-t border-white/15 bg-red-950/35 backdrop-blur-sm"
+        className="absolute inset-x-0 bottom-0 z-10 border-t border-white/15 bg-black/40 backdrop-blur-sm"
       >
         <div className="mx-auto grid max-w-6xl grid-cols-1 divide-y divide-white/15 px-0 sm:grid-cols-3 sm:divide-x sm:divide-y-0 sm:px-6">
           <div className="flex items-center gap-2.5 px-4 py-3 sm:px-2 sm:py-3.5">
