@@ -26,14 +26,14 @@ const MAPS_URL = `https://www.google.com/maps/search/?api=1&query=${encodeURICom
 )}`;
 
 const COLUMN_HEAD =
-  "text-[11px] font-bold uppercase tracking-[0.24em] text-red-300/70";
+  "text-[11px] font-bold uppercase tracking-[0.24em] text-primary/70";
 
 const ICON_CHIP =
-  "flex size-9 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.05] text-red-300 transition-colors group-hover:border-red-400/40 group-hover:text-red-200";
+  "flex size-9 shrink-0 items-center justify-center rounded-xl bg-secondary text-primary ring-1 ring-primary/10 transition-colors group-hover:bg-primary group-hover:text-primary-foreground";
 
 /**
- * Footer — a cinematic near-black close to the page: glowing red ribbon
- * hairline across the top, ambient crimson glows, a giant italic
+ * Footer — a clean light-theme close that matches the site's warm ivory
+ * palette: crimson ribbon hairline, soft blush glows, a giant italic
  * "beautiful smiles." watermark and a live open/closed status band with a
  * one-tap booking button.
  */
@@ -57,31 +57,27 @@ export function Footer() {
   }, []);
 
   return (
-    <footer className="relative mt-auto overflow-hidden bg-[#0f0708] text-red-50">
+    <footer className="relative mt-auto overflow-hidden bg-card text-foreground">
       {/* Ambient scene — ribbon hairline, top light, glows, giant watermark */}
       <div
         aria-hidden
-        className="absolute inset-0 bg-[linear-gradient(180deg,#1e0f12_0%,#150a0c_45%,#0f0708_100%)]"
+        className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent"
       />
       <div
         aria-hidden
-        className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#c2323b] to-transparent"
+        className="absolute inset-x-0 top-0 h-24 bg-[radial-gradient(70%_100%_at_50%_0%,rgba(156,28,35,0.05),transparent)]"
       />
       <div
         aria-hidden
-        className="absolute inset-x-0 top-0 h-24 bg-[radial-gradient(70%_100%_at_50%_0%,rgba(194,50,59,0.13),transparent)]"
+        className="absolute -left-28 top-16 size-80 rounded-full bg-primary/[0.05] blur-3xl"
       />
       <div
         aria-hidden
-        className="absolute -left-28 top-20 size-80 rounded-full bg-[#c2323b]/[0.12] blur-3xl"
-      />
-      <div
-        aria-hidden
-        className="absolute -right-24 bottom-28 size-[26rem] rounded-full bg-[#c2323b]/[0.07] blur-3xl"
+        className="absolute -right-24 bottom-24 size-[26rem] rounded-full bg-primary/[0.04] blur-3xl"
       />
       <p
         aria-hidden
-        className="pointer-events-none absolute inset-x-0 bottom-[-0.3em] select-none whitespace-nowrap text-center font-display text-[19vw] font-medium italic leading-none text-white/[0.04] sm:text-[15vw]"
+        className="pointer-events-none absolute inset-x-0 bottom-[-0.3em] select-none whitespace-nowrap text-center font-display text-[19vw] font-medium italic leading-none text-primary/[0.05] sm:text-[15vw]"
       >
         beautiful smiles.
       </p>
@@ -96,22 +92,22 @@ export function Footer() {
                   src="/logo.png"
                   alt=""
                   aria-hidden
-                  className="size-12 drop-shadow-[0_6px_16px_rgba(0,0,0,0.45)]"
+                  className="size-12 drop-shadow-[0_6px_16px_rgba(156,28,35,0.18)]"
                 />
                 <div>
-                  <p className="font-display text-lg font-semibold leading-tight text-white">
+                  <p className="font-display text-lg font-semibold leading-tight text-foreground">
                     {CLINIC.name}
                   </p>
-                  <p className="text-xs text-red-100/55">
+                  <p className="text-xs text-muted-foreground">
                     {CLINIC.doctor} · {CLINIC.qualifications}
                   </p>
                 </div>
               </div>
-              <p className="mt-5 max-w-sm text-sm leading-relaxed text-red-100/65">
+              <p className="mt-5 max-w-sm text-sm leading-relaxed text-muted-foreground">
                 Gentle, honest and painless dentistry for your whole family — from
                 routine checkups to braces and implants.
               </p>
-              <p dir="rtl" lang="ur" className="mt-3 text-sm text-red-200/75">
+              <p dir="rtl" lang="ur" className="mt-3 text-sm text-primary/80">
                 {CLINIC.taglineUr}
               </p>
             </div>
@@ -127,7 +123,7 @@ export function Footer() {
                     <button
                       type="button"
                       onClick={() => scrollToSection(link.id)}
-                      className="group inline-flex items-center gap-1 text-red-100/70 transition-colors hover:text-white"
+                      className="group inline-flex items-center gap-1 text-foreground/70 transition-colors hover:text-primary"
                     >
                       {link.label}
                       <ArrowUpRight
@@ -149,7 +145,7 @@ export function Footer() {
                 <li>
                   <a
                     href={CLINIC.phoneHref}
-                    className="group flex items-center gap-3 text-red-100/75 transition-colors hover:text-white"
+                    className="group flex items-center gap-3 text-foreground/75 transition-colors hover:text-primary"
                   >
                     <span className={ICON_CHIP}>
                       <Phone className="size-4" aria-hidden />
@@ -162,7 +158,7 @@ export function Footer() {
                     href={CLINIC.whatsapp}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="group flex items-center gap-3 text-red-100/75 transition-colors hover:text-white"
+                    className="group flex items-center gap-3 text-foreground/75 transition-colors hover:text-primary"
                   >
                     <span className={ICON_CHIP}>
                       <MessageCircle className="size-4" aria-hidden />
@@ -170,7 +166,7 @@ export function Footer() {
                     <span className="inline-flex items-center gap-1 font-medium">
                       WhatsApp
                       <ArrowUpRight
-                        className="size-3.5 text-red-300/70 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+                        className="size-3.5 text-primary/60 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
                         aria-hidden
                       />
                     </span>
@@ -181,7 +177,7 @@ export function Footer() {
                     href={MAPS_URL}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="group flex items-center gap-3 text-red-100/75 transition-colors hover:text-white"
+                    className="group flex items-center gap-3 text-foreground/75 transition-colors hover:text-primary"
                   >
                     <span className={ICON_CHIP}>
                       <MapPin className="size-4" aria-hidden />
@@ -196,9 +192,9 @@ export function Footer() {
 
         {/* Live hours band — status dot + one-tap booking */}
         <Reveal delay={0.08}>
-          <div className="mt-12 flex flex-col gap-5 rounded-3xl border border-white/10 bg-white/[0.04] p-5 backdrop-blur-sm sm:flex-row sm:items-center sm:justify-between sm:gap-6 sm:p-6">
+          <div className="mt-12 flex flex-col gap-5 rounded-3xl border border-primary/10 bg-secondary/50 p-5 sm:flex-row sm:items-center sm:justify-between sm:gap-6 sm:p-6">
             <div className="min-w-0">
-              <p className="flex items-center gap-2.5 text-[15px] font-semibold text-white">
+              <p className="flex items-center gap-2.5 text-[15px] font-semibold text-foreground">
                 <span className="relative flex size-2 shrink-0" aria-hidden>
                   {status?.open ? (
                     <>
@@ -206,18 +202,18 @@ export function Footer() {
                       <span className="relative inline-flex size-2 rounded-full bg-emerald-400" />
                     </>
                   ) : (
-                    <span className="inline-flex size-2 rounded-full bg-white/40" />
+                    <span className="inline-flex size-2 rounded-full bg-foreground/30" />
                   )}
                 </span>
                 {status ? status.label : "Open everyday"}
               </p>
-              <p className="mt-1.5 pl-[18px] text-[13px] text-red-100/60">
+              <p className="mt-1.5 pl-[18px] text-[13px] text-muted-foreground">
                 Everyday · 5:00 PM – 12:00 AM
               </p>
             </div>
             <Button
               onClick={() => openBooking()}
-              className="h-11 w-full rounded-full bg-white px-6 text-[15px] font-semibold text-red-950 shadow-[0_10px_30px_rgba(0,0,0,0.35)] hover:bg-red-50 sm:w-auto sm:shrink-0"
+              className="h-11 w-full rounded-full bg-primary px-6 text-[15px] font-semibold shadow-[0_10px_30px_rgb(156,28,35,0.3)] hover:bg-primary/90 sm:w-auto sm:shrink-0"
             >
               <CalendarCheck className="size-5" aria-hidden />
               Book Appointment
@@ -226,7 +222,7 @@ export function Footer() {
         </Reveal>
 
         {/* Bottom bar */}
-        <div className="mt-12 flex flex-col gap-2 border-t border-white/10 pt-6 text-xs text-red-100/50 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mt-12 flex flex-col gap-2 border-t border-border/80 pt-6 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
           <p>
             © {new Date().getFullYear()} {CLINIC.name}. All rights reserved.
           </p>
