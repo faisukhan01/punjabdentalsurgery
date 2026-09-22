@@ -85,7 +85,7 @@ export function Hero() {
           className="mt-5 max-w-3xl font-display text-[2.75rem] font-medium leading-[1.04] text-balance text-white sm:text-6xl lg:text-[4.5rem]"
         >
           Gentle dentistry,{" "}
-          <em className="italic text-[oklch(0.66_0.19_27)]">beautiful smiles.</em>
+          <em className="italic text-[#c2323b]">beautiful smiles.</em>
         </motion.h1>
 
         <motion.p

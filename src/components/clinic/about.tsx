@@ -35,7 +35,7 @@ export function About() {
               src="/images/doctor.png"
               alt={`Portrait of ${CLINIC.doctor}, ${CLINIC.qualifications}`}
               loading="lazy"
-              className="aspect-[4/5] w-full rounded-[1.75rem] object-cover shadow-[0_24px_60px_rgb(88,18,24,0.18)]"
+              className="aspect-[3/4] w-full rounded-[1.75rem] object-cover shadow-[0_24px_60px_rgb(88,18,24,0.18)]"
             />
           </figure>
         </Reveal>
