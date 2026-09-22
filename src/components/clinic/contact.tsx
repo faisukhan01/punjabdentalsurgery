@@ -65,17 +65,17 @@ export function Contact() {
         </div>
 
         <Reveal delay={0.15}>
-          <div className="mt-10 flex flex-col items-center gap-5 rounded-3xl bg-teal-900 px-6 py-10 text-center sm:px-12">
+          <div className="mt-10 flex flex-col items-center gap-5 rounded-3xl bg-red-900 px-6 py-10 text-center sm:px-12">
             <p className="font-display text-2xl font-semibold text-balance text-white sm:text-3xl">
               Ready for a healthier smile?
             </p>
-            <p className="max-w-md text-sm leading-relaxed text-teal-50/85">
+            <p className="max-w-md text-sm leading-relaxed text-red-50/85">
               Book online in under a minute — choose your service, pick a time, and we will see you
               soon.
             </p>
             <Button
               size="lg"
-              className="h-12 rounded-full bg-white px-8 text-base font-semibold text-teal-900 hover:bg-teal-50"
+              className="h-12 rounded-full bg-white px-8 text-base font-semibold text-red-900 hover:bg-red-50"
               onClick={() => openBooking()}
             >
               <CalendarCheck className="size-5" aria-hidden />

@@ -17,16 +17,16 @@ export function Footer() {
   const setView = useClinicStore((s) => s.setView);
 
   return (
-    <footer className="mt-auto bg-teal-950 text-teal-50">
+    <footer className="mt-auto bg-red-950 text-red-50">
       <div className="mx-auto max-w-6xl px-4 pt-12 pb-[92px] sm:px-6 md:pb-12">
         <div className="flex flex-col items-start justify-between gap-8 md:flex-row md:items-center">
           {/* Brand */}
           <div>
             <p className="font-display text-lg font-semibold text-white">{CLINIC.name}</p>
-            <p className="mt-1.5 max-w-xs text-sm leading-relaxed text-teal-100/70">
+            <p className="mt-1.5 max-w-xs text-sm leading-relaxed text-red-100/70">
               {CLINIC.doctor} ({CLINIC.qualifications}) · {CLINIC.tagline}
             </p>
-            <p dir="rtl" lang="ur" className="mt-1.5 text-sm text-teal-200/80">
+            <p dir="rtl" lang="ur" className="mt-1.5 text-sm text-red-200/80">
               {CLINIC.taglineUr}
             </p>
           </div>
@@ -39,7 +39,7 @@ export function Footer() {
                   <button
                     type="button"
                     onClick={() => scrollToSection(link.id)}
-                    className="text-teal-100/80 transition-colors hover:text-white"
+                    className="text-red-100/80 transition-colors hover:text-white"
                   >
                     {link.label}
                   </button>
@@ -49,13 +49,13 @@ export function Footer() {
           </nav>
 
           {/* Contact */}
-          <div className="text-sm text-teal-100/80">
+          <div className="text-sm text-red-100/80">
             <p>{CLINIC.phone}</p>
             <p className="mt-1">{CLINIC.address}</p>
           </div>
         </div>
 
-        <div className="mt-10 flex flex-col items-start justify-between gap-3 border-t border-teal-800/60 pt-6 text-xs text-teal-200/60 sm:flex-row sm:items-center">
+        <div className="mt-10 flex flex-col items-start justify-between gap-3 border-t border-red-800/60 pt-6 text-xs text-red-200/60 sm:flex-row sm:items-center">
           <p>
             © {new Date().getFullYear()} {CLINIC.name}. All rights reserved.
           </p>

@@ -41,7 +41,7 @@ interface SectionHeadingProps {
   className?: string;
 }
 
-/** Uppercase teal kicker + serif display title used across sections. */
+/** Uppercase crimson kicker + serif display title used across sections. */
 export function SectionHeading({
   kicker,
   title,
@@ -61,7 +61,7 @@ export function SectionHeading({
       <span
         className={cn(
           "text-xs font-bold uppercase tracking-[0.28em]",
-          dark ? "text-teal-300" : "text-primary"
+          dark ? "text-red-300" : "text-primary"
         )}
       >
         {kicker}
@@ -78,7 +78,7 @@ export function SectionHeading({
         <p
           className={cn(
             "max-w-2xl text-sm leading-relaxed sm:text-base",
-            dark ? "text-teal-100/80" : "text-muted-foreground"
+            dark ? "text-red-100/80" : "text-muted-foreground"
           )}
         >
           {subtitle}

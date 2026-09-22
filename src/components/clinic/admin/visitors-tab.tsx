@@ -40,7 +40,7 @@ export function VisitorsTab({ stats }: VisitorsTabProps) {
         {statsRow.map((s) => (
           <div
             key={s.label}
-            className="flex items-center gap-3.5 rounded-3xl border border-border/60 bg-card p-4 shadow-[0_8px_30px_rgb(13,148,136,0.06)]"
+            className="flex items-center gap-3.5 rounded-3xl border border-border/60 bg-card p-4 shadow-[0_8px_30px_rgb(156,28,35,0.06)]"
           >
             <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-secondary text-primary">
               <s.icon className="size-5" aria-hidden />
@@ -56,11 +56,11 @@ export function VisitorsTab({ stats }: VisitorsTabProps) {
       </div>
 
       {/* Chart */}
-      <div className="rounded-3xl border border-border/60 bg-card p-4 shadow-[0_8px_30px_rgb(13,148,136,0.06)] sm:p-5">
+      <div className="rounded-3xl border border-border/60 bg-card p-4 shadow-[0_8px_30px_rgb(156,28,35,0.06)] sm:p-5">
         <h3 className="mb-3 text-sm font-semibold text-foreground">Website Visits (Last 7 Days)</h3>
         <div className="mb-2 flex gap-4 text-xs text-muted-foreground">
           <span className="inline-flex items-center gap-1.5">
-            <span className="size-2 rounded-full bg-teal-600" aria-hidden /> Visits
+            <span className="size-2 rounded-full bg-red-600" aria-hidden /> Visits
           </span>
           <span className="inline-flex items-center gap-1.5">
             <span className="size-2 rounded-full bg-amber-600" aria-hidden /> Unique
@@ -81,7 +81,7 @@ export function VisitorsTab({ stats }: VisitorsTabProps) {
             return (
               <div
                 key={device.key}
-                className="flex items-center gap-4 rounded-3xl border border-border/60 bg-card p-5 shadow-[0_8px_30px_rgb(13,148,136,0.06)]"
+                className="flex items-center gap-4 rounded-3xl border border-border/60 bg-card p-5 shadow-[0_8px_30px_rgb(156,28,35,0.06)]"
               >
                 <span className={`flex size-12 shrink-0 items-center justify-center rounded-2xl ${device.tint}`}>
                   <device.icon className="size-6" aria-hidden />

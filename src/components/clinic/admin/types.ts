@@ -93,10 +93,10 @@ export const STATUS_LABELS: Record<AppointmentStatus, string> = {
   CANCELLED: "Cancelled",
 };
 
-/** Tailwind classes per status badge (teal/amber/green/red — never blue). */
+/** Tailwind classes per status badge (amber/red/green — semantic, never blue). */
 export const STATUS_BADGE_CLASSES: Record<AppointmentStatus, string> = {
   PENDING: "border-amber-200 bg-amber-100 text-amber-800",
-  CONFIRMED: "border-teal-200 bg-teal-100 text-teal-800",
+  CONFIRMED: "border-red-200 bg-red-100 text-red-800",
   COMPLETED: "border-green-200 bg-green-100 text-green-700",
   CANCELLED: "border-red-200 bg-red-100 text-red-700",
 };

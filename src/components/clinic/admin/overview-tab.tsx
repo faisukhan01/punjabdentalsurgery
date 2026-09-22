@@ -56,7 +56,7 @@ function StatCard({
   decimals?: number;
 }) {
   return (
-    <div className="flex flex-col gap-2 rounded-3xl border border-border/60 bg-card p-4 shadow-[0_8px_30px_rgb(13,148,136,0.06)] sm:p-5">
+    <div className="flex flex-col gap-2 rounded-3xl border border-border/60 bg-card p-4 shadow-[0_8px_30px_rgb(156,28,35,0.06)] sm:p-5">
       <div className="flex items-center justify-between">
         <span className={cn("flex size-9 items-center justify-center rounded-xl", tint)}>
           <Icon className="size-4.5" aria-hidden />
@@ -124,7 +124,7 @@ export function OverviewTab({ stats, loading, onRefresh }: OverviewTabProps) {
           <StatCard icon={CalendarDays} label="Today's Bookings" value={a.todayBookings} tint="bg-secondary text-primary" />
           <StatCard icon={Clock3} label="Appointments Today" value={a.todaysAppointments} tint="bg-secondary text-primary" />
           <StatCard icon={Hourglass} label="Pending" value={a.PENDING} tint="bg-amber-100 text-amber-700" />
-          <StatCard icon={CheckCircle2} label="Confirmed" value={a.CONFIRMED} tint="bg-teal-100 text-teal-700" />
+          <StatCard icon={CheckCircle2} label="Confirmed" value={a.CONFIRMED} tint="bg-red-100 text-red-700" />
           <StatCard icon={CheckCircle2} label="Completed" value={a.COMPLETED} tint="bg-green-100 text-green-700" />
           <StatCard icon={XCircle} label="Cancelled" value={a.CANCELLED} tint="bg-red-100 text-red-600" />
         </div>
@@ -145,15 +145,15 @@ export function OverviewTab({ stats, loading, onRefresh }: OverviewTabProps) {
 
       {/* Charts */}
       <div className="grid gap-4 xl:grid-cols-2">
-        <div className="rounded-3xl border border-border/60 bg-card p-4 shadow-[0_8px_30px_rgb(13,148,136,0.06)] sm:p-5">
+        <div className="rounded-3xl border border-border/60 bg-card p-4 shadow-[0_8px_30px_rgb(156,28,35,0.06)] sm:p-5">
           <h3 className="mb-3 text-sm font-semibold text-foreground">Bookings (Last 7 Days)</h3>
           <BookingsChart data={a.last7days} />
         </div>
-        <div className="rounded-3xl border border-border/60 bg-card p-4 shadow-[0_8px_30px_rgb(13,148,136,0.06)] sm:p-5">
+        <div className="rounded-3xl border border-border/60 bg-card p-4 shadow-[0_8px_30px_rgb(156,28,35,0.06)] sm:p-5">
           <h3 className="mb-3 text-sm font-semibold text-foreground">Website Visits (Last 7 Days)</h3>
           <div className="mb-2 flex gap-4 text-xs text-muted-foreground">
             <span className="inline-flex items-center gap-1.5">
-              <span className="size-2 rounded-full bg-teal-600" aria-hidden /> Visits
+              <span className="size-2 rounded-full bg-red-600" aria-hidden /> Visits
             </span>
             <span className="inline-flex items-center gap-1.5">
               <span className="size-2 rounded-full bg-amber-600" aria-hidden /> Unique
@@ -165,7 +165,7 @@ export function OverviewTab({ stats, loading, onRefresh }: OverviewTabProps) {
 
       {/* Top services + recent bookings */}
       <div className="grid gap-4 xl:grid-cols-2">
-        <div className="rounded-3xl border border-border/60 bg-card p-4 shadow-[0_8px_30px_rgb(13,148,136,0.06)] sm:p-5">
+        <div className="rounded-3xl border border-border/60 bg-card p-4 shadow-[0_8px_30px_rgb(156,28,35,0.06)] sm:p-5">
           <h3 className="mb-4 text-sm font-semibold text-foreground">Top Services</h3>
           {a.topServices.length === 0 ? (
             <p className="text-sm text-muted-foreground">No bookings yet.</p>
@@ -188,7 +188,7 @@ export function OverviewTab({ stats, loading, onRefresh }: OverviewTabProps) {
           )}
         </div>
 
-        <div className="rounded-3xl border border-border/60 bg-card p-4 shadow-[0_8px_30px_rgb(13,148,136,0.06)] sm:p-5">
+        <div className="rounded-3xl border border-border/60 bg-card p-4 shadow-[0_8px_30px_rgb(156,28,35,0.06)] sm:p-5">
           <h3 className="mb-4 text-sm font-semibold text-foreground">Recent Bookings</h3>
           {stats.recentAppointments.length === 0 ? (
             <p className="text-sm text-muted-foreground">No bookings yet.</p>

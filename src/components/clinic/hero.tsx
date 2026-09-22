@@ -57,11 +57,11 @@ export function Hero() {
       </video>
       {/* Cinematic scrim — deepest where the text sits */}
       <div
-        className="absolute inset-0 bg-gradient-to-t from-teal-950/95 via-teal-950/45 to-teal-950/25"
+        className="absolute inset-0 bg-gradient-to-t from-red-950/95 via-red-950/45 to-red-950/25"
         aria-hidden
       />
       <div
-        className="absolute inset-0 bg-gradient-to-r from-teal-950/65 via-teal-950/25 to-transparent"
+        className="absolute inset-0 bg-gradient-to-r from-red-950/65 via-red-950/25 to-transparent"
         aria-hidden
       />
 
@@ -85,7 +85,7 @@ export function Hero() {
           className="mt-5 max-w-2xl font-display text-[2.75rem] font-semibold leading-[1.05] text-balance text-white sm:text-6xl lg:text-[4.25rem]"
         >
           Gentle hands.{" "}
-          <em className="font-medium italic text-teal-200">Healthier smiles.</em>
+          <em className="font-medium italic text-red-200">Healthier smiles.</em>
         </motion.h1>
 
         <motion.p
@@ -108,7 +108,7 @@ export function Hero() {
         >
           <Button
             size="lg"
-            className="h-12 w-full rounded-full bg-white px-8 text-base font-semibold text-teal-950 shadow-[0_16px_40px_rgb(0,0,0,0.35)] hover:bg-teal-50 sm:w-auto"
+            className="h-12 w-full rounded-full bg-white px-8 text-base font-semibold text-red-950 shadow-[0_16px_40px_rgb(0,0,0,0.35)] hover:bg-red-50 sm:w-auto"
             onClick={() => openBooking()}
           >
             <CalendarCheck className="size-5" aria-hidden />
@@ -129,7 +129,7 @@ export function Hero() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 1.1, duration: 0.8 }}
-        className="absolute inset-x-0 bottom-0 z-10 border-t border-white/15 bg-teal-950/35 backdrop-blur-sm"
+        className="absolute inset-x-0 bottom-0 z-10 border-t border-white/15 bg-red-950/35 backdrop-blur-sm"
       >
         <div className="mx-auto grid max-w-6xl grid-cols-1 divide-y divide-white/15 px-0 sm:grid-cols-3 sm:divide-x sm:divide-y-0 sm:px-6">
           <div className="flex items-center gap-2.5 px-4 py-3 sm:px-2 sm:py-3.5">

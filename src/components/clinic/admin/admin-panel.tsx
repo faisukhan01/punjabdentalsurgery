@@ -130,7 +130,7 @@ function AdminShell({ pin, onLogout, onUnauthorized, onExit }: AdminShellProps) 
   return (
     <div className="flex min-h-screen flex-col bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-teal-950 text-teal-50 shadow-md">
+      <header className="sticky top-0 z-40 bg-red-950 text-red-50 shadow-md">
         <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-2 px-3 sm:px-6 lg:px-8">
           <div className="flex min-w-0 items-center gap-2.5">
             <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground">
@@ -138,14 +138,14 @@ function AdminShell({ pin, onLogout, onUnauthorized, onExit }: AdminShellProps) 
             </span>
             <div className="min-w-0 leading-tight">
               <p className="truncate text-sm font-semibold text-white">Admin Panel</p>
-              <p className="truncate text-[11px] text-teal-300">{CLINIC.name}</p>
+              <p className="truncate text-[11px] text-red-300">{CLINIC.name}</p>
             </div>
           </div>
           <div className="flex items-center gap-1.5 sm:gap-2">
             <Button
               variant="ghost"
               size="icon"
-              className="size-10 text-teal-100 hover:bg-white/10 hover:text-white"
+              className="size-10 text-red-100 hover:bg-white/10 hover:text-white"
               onClick={manualRefresh}
               disabled={statsLoading}
               aria-label="Refresh data"
@@ -156,7 +156,7 @@ function AdminShell({ pin, onLogout, onUnauthorized, onExit }: AdminShellProps) 
             <Button
               variant="ghost"
               size="sm"
-              className="h-10 rounded-full px-3 text-teal-100 hover:bg-white/10 hover:text-white"
+              className="h-10 rounded-full px-3 text-red-100 hover:bg-white/10 hover:text-white"
               onClick={onLogout}
             >
               <LogOut className="size-4" aria-hidden />
@@ -164,7 +164,7 @@ function AdminShell({ pin, onLogout, onUnauthorized, onExit }: AdminShellProps) 
             </Button>
             <Button
               size="sm"
-              className="h-10 rounded-full bg-white px-3 text-teal-900 hover:bg-teal-50 sm:px-4"
+              className="h-10 rounded-full bg-white px-3 text-red-900 hover:bg-red-50 sm:px-4"
               onClick={onExit}
             >
               <ShieldCheck className="size-4" aria-hidden />

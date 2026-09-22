@@ -58,7 +58,7 @@ export function Navbar() {
         "fixed inset-x-0 top-0 z-50 transition-all duration-300",
         scrolled
           ? "border-b border-border/60 bg-background/85 backdrop-blur-md"
-          : "border-b border-transparent bg-gradient-to-b from-teal-950/50 to-transparent"
+          : "border-b border-transparent bg-gradient-to-b from-red-950/50 to-transparent"
       )}
     >
       <nav
@@ -146,7 +146,7 @@ export function Navbar() {
               "hidden h-10 rounded-full px-5 transition-colors sm:inline-flex",
               scrolled
                 ? "bg-primary text-primary-foreground hover:bg-primary/90"
-                : "bg-white text-teal-950 shadow-lg hover:bg-teal-50"
+                : "bg-white text-red-950 shadow-lg hover:bg-red-50"
             )}
             onClick={() => openBooking()}
           >

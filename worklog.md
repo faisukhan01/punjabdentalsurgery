@@ -147,3 +147,23 @@ Work Log:
 
 Stage Summary:
 - Header now: real tooth-treatment footage (no doctor faces, seamless 14s loop, <1MB) + editorial typography + hairline live-status strip + scroll-aware navbar. No cards/pills/icon-rows = no more "AI template" look.
+
+---
+
+Task ID: 9
+Agent: main (Z.ai Code)
+Task: Rebrand site color theme from green/teal to "Red Ribbons" red theme (per user screenshot)
+
+Work Log:
+- User confirmed header bg video is now perfect; requested ONLY a theme change from green to the Red Ribbons red palette (deep crimson primary, warm ivory background, warm beige accents). Explicitly said "don't do anything else".
+- Rewrote globals.css :root tokens: --primary oklch(0.47 0.17 27) deep crimson (#9c1c23-ish), --background warm ivory oklch(0.972 0.012 50), --secondary soft blush, --accent warm beige, updated border/ring/charts/selection/scrollbar hues; .dark block hue-swapped for completeness.
+- Updated layout.tsx viewport themeColor #0f766e → #9c1c23.
+- Swapped hardcoded teal classes to red across public components: navbar (scrim gradient, Book button), footer (bg-red-950 family), hero (red-950 scrims, red-200 italic accent, info strip), reveal (red-300 dark kicker), contact (bg-red-900 CTA banner), floating-actions (WhatsApp float green-500 → red-700 + red shadows).
+- Admin: admin-panel header → red-950; CONFIRMED badge/legend tint → red; charts.tsx TEAL const → RED #b91c1c (bars, area stroke, fills, tooltip cursor); batch sed-replaced all rgb(13,148,136,*) teal-tinted shadows → rgb(156,28,35,*) across services, pin-gate, appointments-tab, visitors-tab, overview-tab, booking-modal; booking step "done" color → red-600.
+- Kept semantic colors untouched: emerald "open now" dot, green success check/completed badges, amber pending/warnings/stars.
+- bun run lint: zero warnings. Browser-verified via agent-browser at 1440px and 390px: hero, services, about, contact, footer, booking modal (service→date step, slots load), admin PIN gate + dashboard (PIN 1234) — all render in the new red theme; zero console errors/page errors.
+
+Stage Summary:
+- Entire site (public + admin) now uses the Red Ribbons inspired crimson/ivory/beige palette; brand tokens centralized in globals.css.
+- No layout, video, content, or logic changes — color swap only, as requested.
+- Database still SQLite pending user's Turso credentials.
