@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CalendarCheck, Lock, Menu } from "lucide-react";
+import { CalendarCheck, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -30,7 +30,6 @@ export function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const openBooking = useClinicStore((s) => s.openBooking);
-  const setView = useClinicStore((s) => s.setView);
 
   useEffect(() => {
     let cancelled = false;
@@ -120,22 +119,6 @@ export function Navbar() {
 
         {/* Actions */}
         <div className="flex items-center gap-1.5">
-          <Button
-            variant="ghost"
-            size="icon"
-            className={cn(
-              "size-10 transition-colors",
-              scrolled
-                ? "text-muted-foreground hover:text-foreground"
-                : "text-white/75 hover:bg-white/10 hover:text-white"
-            )}
-            aria-label="Admin panel"
-            title="Admin panel"
-            onClick={() => setView("admin")}
-          >
-            <Lock className="size-[18px]" aria-hidden />
-          </Button>
-
           <Button
             size="sm"
             className={cn(

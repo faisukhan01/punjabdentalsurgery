@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
     }
     if (isClosedDay(date)) {
       return NextResponse.json(
-        { error: "The clinic is closed on Sundays. Please pick another day." },
+        { error: "The clinic is closed on that day. Please pick another day." },
         { status: 400 }
       );
     }

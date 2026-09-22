@@ -7,31 +7,17 @@ export const CLINIC = {
   qualifications: "BDS, RDS",
   tagline: "Your smile, our responsibility",
   taglineUr: "آپ کی مسکراہٹ، ہماری ذمہ داری",
-  // NOTE: Replace with the clinic's real phone number before going live.
-  phone: "+92 300 1234567",
-  phoneHref: "tel:+923001234567",
-  whatsapp: "https://wa.me/923001234567",
-  // NOTE: Replace with the clinic's real address before going live.
-  address: "Main Bazaar Road, Punjab, Pakistan",
+  phone: "+92 333 4313672",
+  phoneHref: "tel:+923334313672",
+  whatsapp: "https://wa.me/923334313672",
+  address: "Johar Town, Lahore",
   email: "info@punjabdentalsurgery.com",
-  hours: [
-    { days: "Monday – Thursday", time: "10:00 AM – 2:00 PM • 5:00 PM – 9:00 PM" },
-    { days: "Friday", time: "10:00 AM – 12:30 PM • 2:30 PM – 9:00 PM" },
-    { days: "Saturday", time: "10:00 AM – 2:00 PM • 5:00 PM – 9:00 PM" },
-    { days: "Sunday", time: "Closed" },
-  ],
+  // Open every day, evening shift only (5 PM – midnight).
+  hours: [{ days: "Everyday", time: "5:00 PM – 12:00 AM" }],
 } as const;
 
 // Bookable time slots (must match clinic hours above).
 export const TIME_SLOTS = [
-  "10:00 AM",
-  "10:30 AM",
-  "11:00 AM",
-  "11:30 AM",
-  "12:00 PM",
-  "12:30 PM",
-  "1:00 PM",
-  "1:30 PM",
   "5:00 PM",
   "5:30 PM",
   "6:00 PM",
@@ -40,6 +26,12 @@ export const TIME_SLOTS = [
   "7:30 PM",
   "8:00 PM",
   "8:30 PM",
+  "9:00 PM",
+  "9:30 PM",
+  "10:00 PM",
+  "10:30 PM",
+  "11:00 PM",
+  "11:30 PM",
 ] as const;
 
 // Services offered (canonical names stored in the DB for bookings).
@@ -80,22 +72,21 @@ export function clinicDayStartUTC(dateStr: string): Date {
   return new Date(new Date(`${dateStr}T00:00:00.000Z`).getTime() - KARACHI_OFFSET_MS);
 }
 
-/** true if the given YYYY-MM-DD falls on a Sunday in clinic timezone (closed day). */
-export function isClosedDay(dateStr: string): boolean {
-  const d = new Date(`${dateStr}T12:00:00.000Z`);
-  return d.getUTCDay() === 0;
+/** Clinic opens every day - no closed days. Kept for future schedules. */
+export function isClosedDay(_dateStr: string): boolean {
+  return false;
 }
 
 /* ---------- Live open/closed status (for the hero clinic card) ---------- */
 
 const DAY_SESSIONS: ReadonlyArray<ReadonlyArray<readonly [number, number]>> = [
-  [], // Sunday — closed
-  [[600, 840], [1020, 1260]], // Monday
-  [[600, 840], [1020, 1260]], // Tuesday
-  [[600, 840], [1020, 1260]], // Wednesday
-  [[600, 840], [1020, 1260]], // Thursday
-  [[600, 750], [870, 1260]], // Friday
-  [[600, 840], [1020, 1260]], // Saturday
+  [[1020, 1440]], // Sunday — 5:00 PM – 12:00 AM
+  [[1020, 1440]], // Monday
+  [[1020, 1440]], // Tuesday
+  [[1020, 1440]], // Wednesday
+  [[1020, 1440]], // Thursday
+  [[1020, 1440]], // Friday
+  [[1020, 1440]], // Saturday
 ];
 
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -103,6 +94,7 @@ const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Frid
 function formatMinutes(m: number): string {
   const h24 = Math.floor(m / 60);
   const min = m % 60;
+  if (h24 === 24) return "12:00 AM"; // midnight close
   const ampm = h24 >= 12 ? "PM" : "AM";
   const h = h24 % 12 === 0 ? 12 : h24 % 12;
   return `${h}:${String(min).padStart(2, "0")} ${ampm}`;

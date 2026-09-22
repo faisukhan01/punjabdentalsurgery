@@ -21,14 +21,11 @@ import {
   SESSION_PIN_KEY,
   type AdminStats,
 } from "@/components/clinic/admin/types";
-import { useClinicStore } from "@/components/clinic/store";
 import { CLINIC } from "@/lib/clinic";
 
 /* ------------------------------ PIN lifecycle ----------------------------- */
 
 export function AdminPanel() {
-  const setView = useClinicStore((s) => s.setView);
-
   const [checking, setChecking] = useState(true);
   const [pin, setPin] = useState<string | null>(null);
 
@@ -85,7 +82,7 @@ export function AdminPanel() {
 
   if (!pin) return <PinGate onVerified={setPin} />;
 
-  return <AdminShell pin={pin} onLogout={logout} onUnauthorized={onUnauthorized} onExit={() => setView("site")} />;
+  return <AdminShell pin={pin} onLogout={logout} onUnauthorized={onUnauthorized} onExit={() => { window.location.href = "/"; }} />;
 }
 
 /* -------------------------------- Admin shell ------------------------------ */

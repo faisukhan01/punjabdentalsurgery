@@ -1,8 +1,7 @@
 "use client";
 
-import { Clock, Lock, MapPin, MessageCircle, Phone } from "lucide-react";
+import { Clock, MapPin, MessageCircle, Phone } from "lucide-react";
 import { scrollToSection } from "@/components/clinic/scroll";
-import { useClinicStore } from "@/components/clinic/store";
 import { CLINIC } from "@/lib/clinic";
 
 const LINKS = [
@@ -20,8 +19,6 @@ const COLUMN_HEAD =
  * (timings intentionally live here, at the very end of the page).
  */
 export function Footer() {
-  const setView = useClinicStore((s) => s.setView);
-
   return (
     <footer className="mt-auto bg-red-950 text-red-50">
       <div className="mx-auto max-w-6xl px-4 pb-[92px] pt-16 sm:px-6 md:pb-10">
@@ -132,14 +129,10 @@ export function Footer() {
           <p>
             © {new Date().getFullYear()} {CLINIC.name}. All rights reserved.
           </p>
-          <button
-            type="button"
-            onClick={() => setView("admin")}
-            className="inline-flex min-h-11 items-center gap-1.5 transition-colors hover:text-white md:min-h-0"
-          >
-            <Lock className="size-3.5" aria-hidden />
-            Admin Panel
-          </button>
+          <p className="inline-flex items-center gap-1.5">
+            <Clock className="size-3.5" aria-hidden />
+            Open everyday · 5:00 PM – 12:00 AM
+          </p>
         </div>
       </div>
     </footer>

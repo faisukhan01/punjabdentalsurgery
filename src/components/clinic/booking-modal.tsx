@@ -452,7 +452,7 @@ export function BookingModal() {
                 {date && availability?.closed && (
                   <div className="flex items-start gap-2.5 rounded-2xl border border-amber-300/70 bg-amber-50 p-3.5 text-sm text-amber-900">
                     <TriangleAlert className="mt-0.5 size-4 shrink-0 text-amber-500" aria-hidden />
-                    The clinic is closed on Sundays — please pick another day.
+                    The clinic is closed on that day — please pick another day.
                   </div>
                 )}
                 {date && availability?.past && (
