@@ -50,5 +50,9 @@ test
 prompt
 
 server.log
+
+# local sqlite database files (data lives in Turso)
+/db/
+
 # Skills directory
 /skills/
