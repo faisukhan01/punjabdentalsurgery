@@ -72,17 +72,9 @@ export function Hero() {
         variants={{ hidden: {}, show: { transition: { staggerChildren: 0.13, delayChildren: 0.25 } } }}
         className="relative z-10 mx-auto flex w-full max-w-6xl flex-1 flex-col justify-end px-4 pb-40 pt-32 sm:px-6 sm:pb-44"
       >
-        <motion.div variants={item} className="flex">
-          <img
-            src="/logo.png"
-            alt="Punjab Dental Surgery logo"
-            className="size-14 drop-shadow-[0_10px_24px_rgba(0,0,0,0.45)] sm:size-16"
-          />
-        </motion.div>
-
         <motion.p
           variants={item}
-          className="mt-6 flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.32em] text-white/70"
+          className="flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.32em] text-white/70"
         >
           <span className="h-px w-10 bg-white/50" aria-hidden />
           Punjab Dental Surgery
@@ -93,7 +85,7 @@ export function Hero() {
           className="mt-5 max-w-3xl font-display text-[2.75rem] font-medium leading-[1.04] text-balance text-white sm:text-6xl lg:text-[4.5rem]"
         >
           Gentle dentistry,{" "}
-          <em className="italic text-amber-50/95">beautiful smiles.</em>
+          <em className="italic text-[oklch(0.66_0.19_27)]">beautiful smiles.</em>
         </motion.h1>
 
         <motion.p
