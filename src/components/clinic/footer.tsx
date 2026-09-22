@@ -109,18 +109,15 @@ export function Footer() {
                 Clinic Hours
               </span>
             </h3>
-            <dl className="mt-4 space-y-2.5 text-sm">
+            <dl className="mt-4 space-y-3 text-sm">
               {CLINIC.hours.map((row) => (
-                <div
-                  key={row.days}
-                  className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-0.5"
-                >
+                <div key={row.days}>
                   <dt className="text-red-100/75">{row.days}</dt>
                   <dd
                     className={
                       row.time === "Closed"
-                        ? "font-medium text-amber-200/90"
-                        : "text-red-50/85"
+                        ? "mt-0.5 font-medium text-amber-200/90"
+                        : "mt-0.5 text-red-50/85"
                     }
                   >
                     {row.time}
