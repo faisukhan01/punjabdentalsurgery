@@ -1,0 +1,42 @@
+// Punjab Dental Surgery - Database Schema
+// Designed for SQLite now; portable to Turso (libSQL) later — no SQLite-specific types.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Online booking requests submitted by patients from the website.
+model Appointment {
+  id        String   @id @default(cuid())
+  name      String // Patient full name
+  phone     String // Contact phone number
+  email     String? // Optional email
+  service   String // Requested treatment/service
+  date      String // Preferred appointment date (YYYY-MM-DD, clinic local time)
+  timeSlot  String // Preferred time slot label e.g. "10:00 AM"
+  message   String? // Optional note from patient
+  status    String   @default("PENDING") // PENDING | CONFIRMED | COMPLETED | CANCELLED
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([date])
+  @@index([status])
+  @@index([createdAt])
+}
+
+// Website visitor tracking (powers the admin analytics dashboard).
+// Each row = one page visit event. Unique visitors = distinct sessionId.
+model Visit {
+  id        String   @id @default(cuid())
+  sessionId String // Anonymous visitor identifier (client-generated, persisted in localStorage)
+  device    String   @default("desktop") // mobile | desktop | tablet
+  createdAt DateTime @default(now())
+
+  @@index([sessionId])
+  @@index([createdAt])
+}
