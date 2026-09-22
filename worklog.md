@@ -167,3 +167,23 @@ Stage Summary:
 - Entire site (public + admin) now uses the Red Ribbons inspired crimson/ivory/beige palette; brand tokens centralized in globals.css.
 - No layout, video, content, or logic changes — color swap only, as requested.
 - Database still SQLite pending user's Turso credentials.
+
+---
+
+Task ID: 10
+Agent: main (Z.ai Code)
+Task: Header copy redesign (no doctor mention), remove red scrim from video, migrate DB to Turso, push code to GitHub
+
+Work Log:
+- Hero copy rewritten per user request: removed the doctor line entirely; new H1 "Gentle dentistry. Beautiful smiles." with red-200 italic accent; sub now "Honest, painless dental care for your whole family — from routine checkups to braces and implants."; Urdu motto kept. Navbar subtitle swapped from "Dr. Muhammad Siddique · BDS, RDS" to clinic tagline "Your smile, our responsibility".
+- Removed the red-950 gradient overlays ("red shield") from the hero video; replaced with neutral black scrims (bottom from-black/80 via-black/30, top h-36 from-black/45) so footage renders naturally while text stays legible. Info strip bg → black/40.
+- Turso migration: installed @prisma/adapter-libsql@6.19.3 + @libsql/client@0.18.0; aligned prisma/@prisma/client to 6.19.3. Adapter v6 API takes a config object (factory pattern) — confirmed via d.ts. Rewrote src/lib/db.ts: PrismaClient({ adapter: new PrismaLibSQL({ url, authToken }) }) when TURSO_DATABASE_URL is set, local SQLite fallback otherwise. Added TURSO_DATABASE_URL/TURSO_AUTH_TOKEN to .env (gitignored, never pushed).
+- Schema + data: generated DDL via prisma migrate diff; scripts/turso-init.ts (idempotent) created tables on Turso and copied 15 appointments + 83 visits from local SQLite.
+- E2E verified against Turso: availability slots show booked states; booked "General Dental Checkup / 5:00 PM" via UI (201), row confirmed in Turso, Visit count 83→84; deleted test booking via admin DELETE API (x-admin-pin). Restarted dev server (setsid pattern) — stable.
+- Git: untracked .env, db/custom.db and 14 unused root media assets (~20MB) before pushing; two commits authored as faisukhan01 <faisukhan01@users.noreply.github.com> (counts on contribution graph): "Redesign hero…" (34b704e) and "Integrate Turso…" (15d3157). Pushed main to github.com/faisukhan01/punjabdentalsurgery (repo was empty; new branch). Verified pushed tree contains 0 secret files.
+- Lint: 0 warnings. Final browser smoke test: no page errors, Turso-backed pages load.
+
+Stage Summary:
+- Header now: clear video (no red tint), no doctor mention anywhere in header, tighter copy.
+- Production DB is Turso (libsql://fskedu-ai-faisukhan01.aws-ap-south-1.turso.io) via Prisma driver adapter; local SQLite kept as dev fallback.
+- Code live on GitHub at faisukhan01/punjabdentalsurgery (main). Turso token and env files are NOT in the repo — user must configure env vars on their own host.
