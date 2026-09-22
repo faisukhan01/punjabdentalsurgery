@@ -65,22 +65,50 @@ export function Contact() {
         </div>
 
         <Reveal delay={0.15}>
-          <div className="mt-10 flex flex-col items-center gap-5 rounded-3xl bg-red-900 px-6 py-10 text-center sm:px-12">
-            <p className="font-display text-2xl font-semibold text-balance text-white sm:text-3xl">
-              Ready for a healthier smile?
-            </p>
-            <p className="max-w-md text-sm leading-relaxed text-red-50/85">
-              Book online in under a minute — choose your service, pick a time, and we will see you
-              soon.
-            </p>
-            <Button
-              size="lg"
-              className="h-12 rounded-full bg-white px-8 text-base font-semibold text-red-900 hover:bg-red-50"
-              onClick={() => openBooking()}
-            >
-              <CalendarCheck className="size-5" aria-hidden />
-              Book Appointment Online
-            </Button>
+          <div className="relative mt-10 overflow-hidden rounded-[2rem] bg-gradient-to-br from-red-900 via-red-950 to-red-950 px-6 py-14 text-center sm:px-12 sm:py-16">
+            {/* Soft glows + hairline ring + logo watermark */}
+            <div
+              className="pointer-events-none absolute -left-24 -top-28 size-80 rounded-full bg-red-500/20 blur-3xl"
+              aria-hidden
+            />
+            <div
+              className="pointer-events-none absolute -bottom-32 -right-20 size-96 rounded-full bg-amber-400/10 blur-3xl"
+              aria-hidden
+            />
+            <div
+              className="pointer-events-none absolute inset-3 rounded-[1.6rem] border border-white/10"
+              aria-hidden
+            />
+            <img
+              src="/logo.png"
+              alt=""
+              aria-hidden
+              className="pointer-events-none absolute -right-10 -top-12 size-48 opacity-[0.07]"
+            />
+
+            <div className="relative">
+              <p className="text-xs font-bold uppercase tracking-[0.28em] text-red-200/90">
+                Book Your Visit
+              </p>
+              <p className="mt-3 font-display text-3xl font-semibold text-balance text-white sm:text-4xl">
+                Ready for a healthier smile?
+              </p>
+              <p className="mx-auto mt-4 max-w-md text-[15px] leading-relaxed text-red-50/85">
+                Book online in under a minute — choose your service, pick a time, and we will see
+                you soon.
+              </p>
+              <Button
+                size="lg"
+                className="mt-8 h-12 rounded-full bg-white px-8 text-base font-semibold text-red-950 shadow-[0_16px_40px_rgb(0,0,0,0.35)] hover:bg-red-50"
+                onClick={() => openBooking()}
+              >
+                <CalendarCheck className="size-5" aria-hidden />
+                Book Appointment Online
+              </Button>
+              <p dir="rtl" lang="ur" className="mt-6 text-sm text-red-100/60">
+                {CLINIC.taglineUr}
+              </p>
+            </div>
           </div>
         </Reveal>
       </div>

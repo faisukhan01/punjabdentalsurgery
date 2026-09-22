@@ -72,9 +72,17 @@ export function Hero() {
         variants={{ hidden: {}, show: { transition: { staggerChildren: 0.13, delayChildren: 0.25 } } }}
         className="relative z-10 mx-auto flex w-full max-w-6xl flex-1 flex-col justify-end px-4 pb-40 pt-32 sm:px-6 sm:pb-44"
       >
+        <motion.div variants={item} className="flex">
+          <img
+            src="/logo.png"
+            alt="Punjab Dental Surgery logo"
+            className="size-14 drop-shadow-[0_10px_24px_rgba(0,0,0,0.45)] sm:size-16"
+          />
+        </motion.div>
+
         <motion.p
           variants={item}
-          className="flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.3em] text-white/70"
+          className="mt-6 flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.32em] text-white/70"
         >
           <span className="h-px w-10 bg-white/50" aria-hidden />
           Punjab Dental Surgery
@@ -82,22 +90,21 @@ export function Hero() {
 
         <motion.h1
           variants={item}
-          className="mt-5 max-w-2xl font-display text-[2.75rem] font-semibold leading-[1.05] text-balance text-white sm:text-6xl lg:text-[4.25rem]"
+          className="mt-5 max-w-3xl font-display text-[2.75rem] font-medium leading-[1.04] text-balance text-white sm:text-6xl lg:text-[4.5rem]"
         >
-          Gentle dentistry.{" "}
-          <em className="font-medium italic text-red-200">Beautiful smiles.</em>
+          Gentle dentistry,{" "}
+          <em className="italic text-amber-50/95">beautiful smiles.</em>
         </motion.h1>
 
         <motion.p
           variants={item}
-          className="mt-5 max-w-lg text-base leading-relaxed text-white/75 sm:text-lg"
+          className="mt-5 max-w-md text-base leading-relaxed text-white/75 sm:text-lg"
         >
-          Honest, painless dental care for your whole family — from routine checkups to braces and
-          implants.
+          Honest, painless dental care for your whole family.
         </motion.p>
 
-        <motion.div variants={item} className="mt-2.5 flex">
-          <p dir="rtl" lang="ur" className="text-sm text-white/55">
+        <motion.div variants={item} className="mt-3 flex">
+          <p dir="rtl" lang="ur" className="text-[15px] text-amber-50/70">
             {CLINIC.taglineUr}
           </p>
         </motion.div>

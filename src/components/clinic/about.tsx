@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarCheck, Check, Clock } from "lucide-react";
+import { CalendarCheck, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Reveal } from "@/components/clinic/reveal";
 import { useClinicStore } from "@/components/clinic/store";
@@ -15,7 +15,8 @@ const POINTS = [
 
 /**
  * About — the single photo section of the page: the doctor portrait,
- * a short story, four quiet proof points and today-friendly hours card.
+ * a short story and four quiet proof points. Clinic hours live in the
+ * footer, at the end of the page.
  */
 export function About() {
   const openBooking = useClinicStore((s) => s.openBooking);
@@ -34,7 +35,7 @@ export function About() {
               src="/images/doctor.png"
               alt={`Portrait of ${CLINIC.doctor}, ${CLINIC.qualifications}`}
               loading="lazy"
-              className="aspect-[4/5] w-full rounded-[1.75rem] object-cover shadow-[0_24px_60px_rgb(15,60,70,0.16)]"
+              className="aspect-[4/5] w-full rounded-[1.75rem] object-cover shadow-[0_24px_60px_rgb(88,18,24,0.18)]"
             />
           </figure>
         </Reveal>
@@ -75,35 +76,6 @@ export function About() {
               <p className="text-sm text-muted-foreground">
                 {CLINIC.qualifications} · Licensed dental surgeon
               </p>
-            </div>
-          </Reveal>
-
-          {/* Hours — one quiet card */}
-          <Reveal delay={0.2}>
-            <div className="mt-10 rounded-2xl border border-border/70 bg-card p-6">
-              <h3 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-foreground/80">
-                <Clock className="size-4 text-primary" aria-hidden />
-                Clinic Hours
-              </h3>
-              <dl className="mt-4 space-y-2.5">
-                {CLINIC.hours.map((row) => (
-                  <div
-                    key={row.days}
-                    className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-0.5 text-sm"
-                  >
-                    <dt className="font-medium text-foreground/85">{row.days}</dt>
-                    <dd
-                      className={
-                        row.time === "Closed"
-                          ? "font-medium text-red-600"
-                          : "text-muted-foreground"
-                      }
-                    >
-                      {row.time}
-                    </dd>
-                  </div>
-                ))}
-              </dl>
             </div>
           </Reveal>
         </div>

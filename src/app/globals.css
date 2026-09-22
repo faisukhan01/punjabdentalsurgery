@@ -165,4 +165,27 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+
+  /* Reviews marquee — slow drift left, pauses on hover */
+  .animate-marquee {
+    animation: marquee 48s linear infinite;
+  }
+  .marquee:hover .animate-marquee {
+    animation-play-state: paused;
+  }
+}
+
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee {
+    animation: none;
+  }
 }

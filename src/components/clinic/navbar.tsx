@@ -72,16 +72,12 @@ export function Navbar() {
           className="flex min-h-11 items-center gap-2.5 text-left"
           aria-label="Back to top"
         >
-          <span
-            className={cn(
-              "flex size-9 shrink-0 items-center justify-center rounded-xl transition-colors",
-              scrolled ? "bg-primary text-primary-foreground" : "bg-white/15 text-white backdrop-blur-sm"
-            )}
-          >
-            <svg viewBox="0 0 24 24" fill="currentColor" className="size-5" aria-hidden>
-              <path d="M12 2C9.5 2 8.6 3.2 7 3.2 4.8 3.2 3 5.4 3 8.6c0 2.5.8 4 1.6 6.2.6 1.7.8 4.6 1.7 6 .6.9 1.7.7 2.1-.3.5-1.2.9-3.6 1.6-5 .4-.8 1.2-.8 1.6 0 .7 1.4 1.1 3.8 1.6 5 .4 1 1.5 1.2 2.1.3.9-1.4 1.1-4.3 1.7-6C17.4 12.6 21 11 21 8.6 21 5.4 19.2 3.2 17 3.2c-1.6 0-2.5-1.2-5-1.2Z" />
-            </svg>
-          </span>
+          <img
+            src="/logo.png"
+            alt=""
+            aria-hidden
+            className="size-9 shrink-0 drop-shadow-[0_4px_10px_rgba(0,0,0,0.25)]"
+          />
           <span className="flex min-w-0 flex-col leading-tight">
             <span
               className={cn(

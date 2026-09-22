@@ -56,3 +56,23 @@ server.log
 
 # Skills directory
 /skills/
+
+# internal agent tooling & uploads
+worklog.md
+/agent-ctx/
+/upload/
+/scripts/logo-prepare.ts
+
+# sandbox infra (not part of the app)
+/.zscripts/
+Caddyfile
+/tests/
+/examples/
+/mini-services/
+/download/
+
+# stray root-level media (assets live in public/)
+/*.jpg
+/*.jpeg
+/*.png
+/*.mp4
