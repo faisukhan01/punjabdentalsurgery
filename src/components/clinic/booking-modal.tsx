@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
 import { format, parseISO } from "date-fns";
 import {
@@ -42,10 +43,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { useClinicStore } from "@/components/clinic/store";
-import {
-  TIME_SLOTS,
-  clinicTodayStr,
-} from "@/lib/clinic";
+import { cn } from "@/lib/utils";
+import { TIME_SLOTS, clinicTodayStr } from "@/lib/clinic";
 
 /* ------------------------------- Types ------------------------------- */
 
@@ -80,10 +79,23 @@ const emptyForm: BookingForm = { name: "", phone: "", email: "" };
 
 /** Slide direction-aware step transitions (dir: 1 = forward, -1 = back). */
 const stepVariants = {
-  initial: (d: number) => ({ opacity: 0, x: 40 * d }),
+  initial: (d: number) => ({ opacity: 0, x: 28 * d }),
   animate: { opacity: 1, x: 0 },
-  exit: (d: number) => ({ opacity: 0, x: -40 * d }),
+  exit: (d: number) => ({ opacity: 0, x: -28 * d }),
 };
+
+/* --------------------------- Style constants --------------------------- */
+
+/** Micro section label — quiet, editorial. */
+const MICRO =
+  "text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground";
+
+/** Single solid primary CTA — no gradients, no glow. */
+const BTN_PRIMARY =
+  "h-12 w-full rounded-xl text-[15px] font-semibold shadow-[0_8px_20px_rgb(18,88,143,0.16)] transition-all hover:shadow-[0_10px_24px_rgb(18,88,143,0.24)] active:scale-[0.99] disabled:pointer-events-none disabled:bg-muted disabled:text-muted-foreground disabled:shadow-none disabled:active:scale-100";
+
+const INPUT_CLS = "h-12 rounded-xl border-border/80 bg-background";
+const PANEL_CLS = "rounded-2xl border border-border/70 bg-secondary/45";
 
 /* --------------------------- Small helpers --------------------------- */
 
@@ -324,25 +336,27 @@ export function BookingModal() {
     <Dialog open={bookingOpen} onOpenChange={(open) => !open && closeBooking()}>
       <DialogContent
         showCloseButton={false}
-        className={`
-          gap-0 overflow-hidden p-0
-          fixed inset-x-0 bottom-0 top-auto left-0 right-0
-          translate-x-0 translate-y-0
-          max-h-[94svh] w-full sm:max-w-lg
-          rounded-t-[2rem] sm:rounded-[2rem]
-          sm:inset-x-auto sm:bottom-auto sm:left-1/2 sm:top-1/2 sm:right-auto
-          sm:-translate-x-1/2 sm:-translate-y-1/2
-          sm:max-h-[92svh]
-          border-border/60 shadow-[0_32px_90px_rgb(9,30,54,0.4)]
-          data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95
-        `}
+        className={cn(
+          "gap-0 overflow-hidden p-0",
+          // Mobile: floating bottom sheet — 8px air on every side, fully rounded
+          "fixed inset-x-2 bottom-2 top-auto left-auto right-auto",
+          "translate-x-0 translate-y-0 w-full max-w-none",
+          // Desktop: centered card
+          "sm:inset-x-auto sm:bottom-auto sm:left-1/2 sm:top-1/2 sm:right-auto",
+          "sm:-translate-x-1/2 sm:-translate-y-1/2 sm:max-w-md",
+          "max-h-[calc(100svh-1rem)] sm:max-h-[88svh]",
+          "rounded-[1.75rem] border-border/60 bg-card",
+          "shadow-[0_24px_70px_rgb(9,30,54,0.35),0_4px_16px_rgb(9,30,54,0.10)]",
+          "data-[state=open]:slide-in-from-bottom-6 data-[state=closed]:slide-out-to-bottom-4",
+          "duration-300"
+        )}
       >
-        <div className="scrollbar-thin max-h-[94svh] overflow-y-auto sm:max-h-[92svh]">
+        <div className="scrollbar-thin max-h-[calc(100svh-1rem)] overflow-y-auto sm:max-h-[88svh]">
           {/* ------------------------- Header ------------------------- */}
-          <div className="relative border-b border-border/70 bg-gradient-to-b from-secondary/70 to-background px-5 pb-4 pt-5 sm:px-7">
+          <div className="relative border-b border-border/60 px-5 pb-5 pt-5 sm:px-7">
             {/* Mobile grab handle */}
             <span
-              className="absolute left-1/2 top-2 h-1 w-10 -translate-x-1/2 rounded-full bg-border sm:hidden"
+              className="absolute left-1/2 top-2 h-1 w-10 -translate-x-1/2 rounded-full bg-border/80 sm:hidden"
               aria-hidden
             />
 
@@ -350,72 +364,72 @@ export function BookingModal() {
               type="button"
               onClick={closeBooking}
               aria-label="Close booking dialog"
-              className="absolute right-3.5 top-3.5 flex size-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              className="absolute right-4 top-4 flex size-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="size-4" aria-hidden>
-                <path d="M18 6 6 18M6 6l12 12" strokeLinecap="round" strokeLinejoin="round" />
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                className="size-4"
+                aria-hidden
+              >
+                <path
+                  d="M18 6 6 18M6 6l12 12"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
               </svg>
             </button>
 
             <DialogHeader className="gap-0 pt-2 text-left sm:pt-0">
-              <div className="flex items-center gap-3.5 pr-8">
-                <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#12588f] to-[#0f7f9c] text-white shadow-[0_10px_24px_rgb(18,88,143,0.35)]">
-                  <CalendarCheck className="size-5.5" aria-hidden />
+              <div className="flex items-center gap-3.5 pr-10">
+                <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-secondary/70 ring-1 ring-inset ring-border/50">
+                  <Image
+                    src="/logo.png"
+                    alt=""
+                    width={44}
+                    height={44}
+                    className="size-9 object-contain"
+                  />
                 </span>
                 <div className="min-w-0">
-                  <DialogTitle className="font-display text-[1.3rem] font-semibold leading-tight text-foreground">
+                  <DialogTitle className="font-display text-xl font-semibold leading-tight text-foreground">
                     Book an appointment
                   </DialogTitle>
-                  <DialogDescription className="mt-0.5 truncate text-[13px] text-muted-foreground">
+                  <DialogDescription className="mt-0.5 text-[13px] leading-snug text-muted-foreground">
                     Punjab Dental Surgery · Johar Town, Lahore
                   </DialogDescription>
                 </div>
               </div>
             </DialogHeader>
 
-            {/* Step rail */}
-            <ol className="mt-4 flex items-center gap-2" aria-label="Booking steps">
-              {STEP_LABELS.map((label, i) => {
-                const n = (i + 1) as 1 | 2 | 3;
-                const active = n === railStep && step !== 4;
-                const done = n < railStep || step === 4;
-                return (
-                  <li key={label} className="contents">
-                    <span
-                      className={`flex items-center gap-2 ${
-                        n === 3 ? "shrink-0" : ""
-                      }`}
-                      aria-current={active ? "step" : undefined}
-                    >
-                      <span
-                        className={`flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-bold transition-all ${
-                          done
-                            ? "bg-primary/10 text-primary"
-                            : active
-                              ? "bg-gradient-to-br from-[#12588f] to-[#0f7f9c] text-white shadow-[0_6px_16px_rgb(18,88,143,0.35)]"
-                              : "border border-border bg-card text-muted-foreground"
-                        }`}
-                      >
-                        {done ? <Check className="size-3.5" strokeWidth={3} aria-hidden /> : n}
-                      </span>
-                      <span
-                        className={`hidden text-[11px] font-bold uppercase tracking-[0.14em] sm:inline ${
-                          done || active ? "text-foreground" : "text-muted-foreground"
-                        }`}
-                      >
-                        {label}
-                      </span>
-                    </span>
-                    {n < 3 && (
-                      <span
-                        className={`h-px flex-1 ${done ? "bg-primary/40" : "bg-border"}`}
-                        aria-hidden
-                      />
+            {/* Quiet step progress — micro copy + hairline segments */}
+            <div className="mt-5">
+              <div className="flex items-baseline justify-between gap-3">
+                <span className={MICRO}>
+                  {step === 4 ? "All set" : `Step ${railStep} of 3`}
+                </span>
+                <span className="text-[11px] font-medium text-muted-foreground/70">
+                  {step === 4 ? "Confirmed" : STEP_LABELS[railStep - 1]}
+                </span>
+              </div>
+              <div className="mt-2.5 flex gap-1.5" aria-hidden>
+                {[1, 2, 3].map((n) => (
+                  <span
+                    key={n}
+                    className={cn(
+                      "h-1 flex-1 rounded-full transition-colors duration-300",
+                      step === 4 || n < railStep
+                        ? "bg-primary"
+                        : n === railStep
+                          ? "bg-primary/40"
+                          : "bg-border/80"
                     )}
-                  </li>
-                );
-              })}
-            </ol>
+                  />
+                ))}
+              </div>
+            </div>
           </div>
 
           {/* ------------------------------ Steps body ------------------------------ */}
@@ -430,52 +444,55 @@ export function BookingModal() {
                   initial="initial"
                   animate="animate"
                   exit="exit"
-                  transition={{ duration: 0.3, ease: "easeOut" }}
-                  className="flex flex-col gap-4"
+                  transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+                  className="flex flex-col gap-5"
                 >
-                  <div className="flex items-start gap-3">
-                    <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-xl bg-secondary text-primary">
-                      <Stethoscope className="size-4" aria-hidden />
-                    </span>
-                    <div>
-                      <h3 className="font-display text-lg font-semibold leading-snug text-foreground">
-                        How can we help you today?
-                      </h3>
-                      <p className="text-sm text-muted-foreground">
-                        Your visit type — then add a note if you like.
-                      </p>
-                    </div>
+                  <div>
+                    <h3 className="font-display text-xl font-semibold leading-snug text-foreground">
+                      How can we help you today?
+                    </h3>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      Pick a visit type — you can add details below.
+                    </p>
                   </div>
 
-                  {/* Visit type — simple & friendly, ready to go */}
-                  <div className="flex items-center gap-3 rounded-2xl border border-primary/30 bg-secondary/60 p-4 shadow-[0_8px_20px_rgb(18,88,143,0.08)]">
-                    <span
-                      className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#12588f] to-[#0f7f9c] text-white shadow-[0_6px_14px_rgb(18,88,143,0.35)]"
-                      aria-hidden
-                    >
-                      <Stethoscope className="size-5" />
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-[15px] font-bold text-primary">{visitLabel}</p>
-                      <p className="mt-0.5 text-xs leading-snug text-muted-foreground">
-                        {visitService === "General Dental Checkup"
-                          ? "Not sure what you need? A checkup is the perfect start."
-                          : "Selected from our services."}
-                      </p>
+                  {/* Visit type */}
+                  <div className="flex flex-col gap-2">
+                    <span className={MICRO}>Visit type</span>
+                    <div className="flex items-center gap-3.5 rounded-2xl border border-primary/30 bg-secondary/50 p-4">
+                      <span
+                        className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"
+                        aria-hidden
+                      >
+                        <Stethoscope className="size-5" />
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[15px] font-semibold text-foreground">
+                          {visitLabel}
+                        </p>
+                        <p className="mt-0.5 text-xs leading-snug text-muted-foreground">
+                          {visitService === "General Dental Checkup"
+                            ? "Not sure what you need? A checkup is the perfect start."
+                            : "Selected from our services."}
+                        </p>
+                      </div>
+                      <span
+                        className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground"
+                        aria-hidden
+                      >
+                        <Check className="size-3.5" strokeWidth={3} />
+                      </span>
                     </div>
-                    <span
-                      className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground"
-                      aria-hidden
-                    >
-                      <Check className="size-3.5" strokeWidth={3} />
-                    </span>
                   </div>
 
                   {/* Optional problem / purpose — box stays empty, no placeholder */}
-                  <div className="flex flex-col gap-1.5">
+                  <div className="flex flex-col gap-2">
                     <div className="flex items-end justify-between gap-3">
-                      <Label htmlFor="booking-reason" className="text-[13px]">
-                        Your problem or purpose{" "}
+                      <Label
+                        htmlFor="booking-reason"
+                        className="text-[13px] font-medium text-foreground"
+                      >
+                        Anything we should know?{" "}
                         <span className="font-normal text-muted-foreground">
                           (optional)
                         </span>
@@ -492,18 +509,15 @@ export function BookingModal() {
                       onChange={(e) => setReason(e.target.value)}
                       maxLength={PURPOSE_MAX}
                       rows={4}
-                      className="min-h-24 resize-none rounded-2xl border-border bg-background text-[15px] leading-relaxed"
+                      className="resize-none rounded-xl border-border/80 bg-background text-[15px] leading-relaxed"
                     />
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs leading-relaxed text-muted-foreground">
                       Any pain, sensitivity or reason for your visit — the doctor
                       reviews this before you arrive.
                     </p>
                   </div>
 
-                  <Button
-                    className="mt-1 h-12 w-full rounded-full bg-gradient-to-r from-[#12588f] to-[#0f7f9c] text-[15px] font-semibold shadow-[0_10px_28px_rgb(18,88,143,0.35)] transition-all hover:opacity-95"
-                    onClick={() => goTo(2)}
-                  >
+                  <Button className={BTN_PRIMARY} onClick={() => goTo(2)}>
                     Continue
                     <ArrowRight className="size-4" aria-hidden />
                   </Button>
@@ -519,29 +533,33 @@ export function BookingModal() {
                   initial="initial"
                   animate="animate"
                   exit="exit"
-                  transition={{ duration: 0.3, ease: "easeOut" }}
-                  className="flex flex-col gap-4"
+                  transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+                  className="flex flex-col gap-5"
                 >
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="flex items-start gap-3">
-                      <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-xl bg-secondary text-primary">
-                        <Clock className="size-4" aria-hidden />
-                      </span>
-                      <div>
-                        <h3 className="font-display text-lg font-semibold leading-snug text-foreground">
-                          Date &amp; time slot
-                        </h3>
-                        <p className="text-sm text-muted-foreground">Open every day, 5 PM – 12 AM.</p>
-                      </div>
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <h3 className="font-display text-xl font-semibold leading-snug text-foreground">
+                        Date &amp; time
+                      </h3>
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        Open every day, 5 PM – 12 AM.
+                      </p>
                     </div>
-                    <Button variant="ghost" size="sm" className="h-9 shrink-0" onClick={back}>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-9 shrink-0 rounded-full text-muted-foreground hover:text-foreground"
+                      onClick={back}
+                    >
                       <ArrowLeft className="size-4" aria-hidden />
                       Back
                     </Button>
                   </div>
 
-                  <div className="flex flex-col gap-1.5">
-                    <Label htmlFor="booking-date">Appointment date</Label>
+                  <div className="flex flex-col gap-2">
+                    <Label htmlFor="booking-date" className={MICRO}>
+                      Appointment date
+                    </Label>
                     <Input
                       id="booking-date"
                       type="date"
@@ -549,26 +567,34 @@ export function BookingModal() {
                       min={todayStr}
                       max={maxDate}
                       onChange={(e) => handleDateChange(e.target.value)}
-                      className="h-12 rounded-2xl border-border bg-background"
+                      className={INPUT_CLS}
                     />
                   </div>
 
-                  <div className="flex flex-col gap-1.5">
-                    <Label htmlFor="booking-slot">Time slot</Label>
+                  <div className="flex flex-col gap-2">
+                    <Label htmlFor="booking-slot" className={MICRO}>
+                      Time slot
+                    </Label>
                     <Select
                       value={slot ?? undefined}
                       onValueChange={(v) => {
                         setSlot(v);
                         if (v !== CUSTOM_SLOT) setCustomTime("");
                       }}
-                      disabled={!date || availLoading || Boolean(availability?.closed || availability?.past)}
+                      disabled={
+                        !date ||
+                        availLoading ||
+                        Boolean(availability?.closed || availability?.past)
+                      }
                     >
                       <SelectTrigger
                         id="booking-slot"
                         aria-label="Choose a time slot"
-                        className="h-12 w-full rounded-2xl border-border bg-background"
+                        className={cn(INPUT_CLS, "w-full")}
                       >
-                        <SelectValue placeholder={date ? "Choose a time" : "Pick a date first"} />
+                        <SelectValue
+                          placeholder={date ? "Choose a time" : "Pick a date first"}
+                        />
                       </SelectTrigger>
                       <SelectContent className="max-h-64 rounded-2xl">
                         {TIME_SLOTS.map((s) => {
@@ -610,7 +636,7 @@ export function BookingModal() {
                       transition={{ duration: 0.25, ease: "easeOut" }}
                       className="overflow-hidden"
                     >
-                      <div className="flex flex-col gap-1.5 rounded-2xl border border-primary/25 bg-secondary/50 p-4">
+                      <div className="flex flex-col gap-2 rounded-2xl border border-primary/25 bg-secondary/50 p-4">
                         <Label htmlFor="booking-custom-time" className="text-[13px]">
                           Your preferred time
                         </Label>
@@ -622,10 +648,11 @@ export function BookingModal() {
                           max="23:45"
                           step={300}
                           onChange={(e) => setCustomTime(e.target.value)}
-                          className="h-12 rounded-2xl border-border bg-card"
+                          className={INPUT_CLS}
                         />
                         <p className="text-xs text-muted-foreground">
-                          Clinic hours: 5:00 PM – 12:00 AM. Any time in between works — e.g. 6:45 PM.
+                          Clinic hours: 5:00 PM – 12:00 AM. Any time in between works
+                          — e.g. 6:45 PM.
                         </p>
                         {customOutOfRange && customTime && (
                           <p className="text-xs font-medium text-destructive">
@@ -637,21 +664,28 @@ export function BookingModal() {
                   )}
 
                   {date && availability?.closed && (
-                    <div className="flex items-start gap-2.5 rounded-2xl border border-amber-300/70 bg-amber-50 p-3.5 text-sm text-amber-900">
-                      <TriangleAlert className="mt-0.5 size-4 shrink-0 text-amber-500" aria-hidden />
+                    <div className="flex items-start gap-2.5 rounded-xl border border-amber-300/70 bg-amber-50 p-3.5 text-sm text-amber-900">
+                      <TriangleAlert
+                        className="mt-0.5 size-4 shrink-0 text-amber-500"
+                        aria-hidden
+                      />
                       The clinic is closed on that day — please pick another day.
                     </div>
                   )}
                   {date && availability?.past && (
-                    <div className="flex items-start gap-2.5 rounded-2xl border border-amber-300/70 bg-amber-50 p-3.5 text-sm text-amber-900">
-                      <TriangleAlert className="mt-0.5 size-4 shrink-0 text-amber-500" aria-hidden />
-                      That date has already passed — please pick today or a future date.
+                    <div className="flex items-start gap-2.5 rounded-xl border border-amber-300/70 bg-amber-50 p-3.5 text-sm text-amber-900">
+                      <TriangleAlert
+                        className="mt-0.5 size-4 shrink-0 text-amber-500"
+                        aria-hidden
+                      />
+                      That date has already passed — please pick today or a future
+                      date.
                     </div>
                   )}
 
                   {date && availLoading && (
                     <div className="flex flex-col gap-2">
-                      <Skeleton className="h-12 rounded-2xl" />
+                      <Skeleton className="h-12 rounded-xl" />
                     </div>
                   )}
 
@@ -665,7 +699,7 @@ export function BookingModal() {
                   )}
 
                   <Button
-                    className="mt-1 h-12 w-full rounded-full bg-gradient-to-r from-[#12588f] to-[#0f7f9c] text-[15px] font-semibold shadow-[0_10px_28px_rgb(18,88,143,0.35)] transition-all hover:opacity-95 disabled:bg-muted disabled:bg-none disabled:text-muted-foreground disabled:shadow-none"
+                    className={BTN_PRIMARY}
                     disabled={
                       !date ||
                       !effectiveSlot ||
@@ -691,67 +725,73 @@ export function BookingModal() {
                   initial="initial"
                   animate="animate"
                   exit="exit"
-                  transition={{ duration: 0.3, ease: "easeOut" }}
-                  className="flex flex-col gap-4"
+                  transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+                  className="flex flex-col gap-5"
                 >
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="flex items-start gap-3">
-                      <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-xl bg-secondary text-primary">
-                        <User className="size-4" aria-hidden />
-                      </span>
-                      <div>
-                        <h3 className="font-display text-lg font-semibold leading-snug text-foreground">
-                          Your details
-                        </h3>
-                        <p className="text-sm text-muted-foreground">We&apos;ll call to confirm.</p>
-                      </div>
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <h3 className="font-display text-xl font-semibold leading-snug text-foreground">
+                        Your details
+                      </h3>
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        We&apos;ll call to confirm.
+                      </p>
                     </div>
-                    <Button variant="ghost" size="sm" className="h-9 shrink-0" onClick={back}>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-9 shrink-0 rounded-full text-muted-foreground hover:text-foreground"
+                      onClick={back}
+                    >
                       <ArrowLeft className="size-4" aria-hidden />
                       Back
                     </Button>
                   </div>
 
-                  {/* Summary card */}
-                  <dl className="flex flex-col gap-2.5 rounded-2xl border border-border/70 bg-secondary/50 px-4 py-3.5 text-[13px]">
-                    <div className="flex items-start justify-between gap-4">
-                      <dt className="flex shrink-0 items-center gap-1.5 text-muted-foreground">
+                  {/* Summary card — quiet receipt with hairline dividers */}
+                  <dl className="divide-y divide-border/60 overflow-hidden rounded-2xl border border-border/70 bg-secondary/40">
+                    <div className="flex items-start justify-between gap-4 px-4 py-2.5">
+                      <dt className="flex shrink-0 items-center gap-1.5 text-[13px] text-muted-foreground">
                         <NotebookPen className="size-3.5" aria-hidden />
                         Purpose
                       </dt>
-                      <dd className="line-clamp-2 text-right font-semibold text-foreground">
+                      <dd className="line-clamp-2 text-right text-[13px] font-semibold text-foreground">
                         {effectiveService}
                       </dd>
                     </div>
                     {doctorNote && (
-                      <div className="flex items-start justify-between gap-4">
-                        <dt className="flex shrink-0 items-center gap-1.5 text-muted-foreground">
+                      <div className="flex items-start justify-between gap-4 px-4 py-2.5">
+                        <dt className="flex shrink-0 items-center gap-1.5 text-[13px] text-muted-foreground">
                           <PenLine className="size-3.5" aria-hidden />
                           Note
                         </dt>
-                        <dd className="line-clamp-2 text-right text-foreground/80">
+                        <dd className="line-clamp-2 text-right text-[13px] text-foreground/80">
                           {doctorNote}
                         </dd>
                       </div>
                     )}
-                    <div className="flex items-center justify-between gap-4">
-                      <dt className="flex shrink-0 items-center gap-1.5 text-muted-foreground">
+                    <div className="flex items-center justify-between gap-4 px-4 py-2.5">
+                      <dt className="flex shrink-0 items-center gap-1.5 text-[13px] text-muted-foreground">
                         <CalendarCheck className="size-3.5" aria-hidden />
                         Date
                       </dt>
-                      <dd className="font-semibold text-foreground">{prettyDate(date)}</dd>
+                      <dd className="text-right text-[13px] font-semibold text-foreground">
+                        {prettyDate(date)}
+                      </dd>
                     </div>
-                    <div className="flex items-center justify-between gap-4">
-                      <dt className="flex shrink-0 items-center gap-1.5 text-muted-foreground">
+                    <div className="flex items-center justify-between gap-4 px-4 py-2.5">
+                      <dt className="flex shrink-0 items-center gap-1.5 text-[13px] text-muted-foreground">
                         <Clock className="size-3.5" aria-hidden />
                         Time
                       </dt>
-                      <dd className="font-semibold text-foreground">{effectiveSlot}</dd>
+                      <dd className="text-[13px] font-semibold text-foreground">
+                        {effectiveSlot}
+                      </dd>
                     </div>
                   </dl>
 
-                  <div className="flex flex-col gap-3.5">
-                    <div className="flex flex-col gap-1.5">
+                  <div className="flex flex-col gap-4">
+                    <div className="flex flex-col gap-2">
                       <Label htmlFor="booking-name">Full name *</Label>
                       <div className="relative">
                         <User
@@ -761,17 +801,21 @@ export function BookingModal() {
                         <Input
                           id="booking-name"
                           value={form.name}
-                          onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                          onChange={(e) =>
+                            setForm((f) => ({ ...f, name: e.target.value }))
+                          }
                           placeholder="e.g. Ali Raza"
                           autoComplete="name"
                           aria-invalid={Boolean(errors.name)}
-                          className="h-12 rounded-2xl border-border bg-background pl-10"
+                          className={cn(INPUT_CLS, "pl-10")}
                         />
                       </div>
-                      {errors.name && <p className="text-xs text-destructive">{errors.name}</p>}
+                      {errors.name && (
+                        <p className="text-xs text-destructive">{errors.name}</p>
+                      )}
                     </div>
 
-                    <div className="flex flex-col gap-1.5">
+                    <div className="flex flex-col gap-2">
                       <Label htmlFor="booking-phone">Phone number *</Label>
                       <div className="relative">
                         <Phone
@@ -783,17 +827,21 @@ export function BookingModal() {
                           type="tel"
                           inputMode="tel"
                           value={form.phone}
-                          onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
+                          onChange={(e) =>
+                            setForm((f) => ({ ...f, phone: e.target.value }))
+                          }
                           placeholder="03XX-XXXXXXX"
                           autoComplete="tel"
                           aria-invalid={Boolean(errors.phone)}
-                          className="h-12 rounded-2xl border-border bg-background pl-10"
+                          className={cn(INPUT_CLS, "pl-10")}
                         />
                       </div>
-                      {errors.phone && <p className="text-xs text-destructive">{errors.phone}</p>}
+                      {errors.phone && (
+                        <p className="text-xs text-destructive">{errors.phone}</p>
+                      )}
                     </div>
 
-                    <div className="flex flex-col gap-1.5">
+                    <div className="flex flex-col gap-2">
                       <Label htmlFor="booking-email">Email (optional)</Label>
                       <div className="relative">
                         <Mail
@@ -804,14 +852,18 @@ export function BookingModal() {
                           id="booking-email"
                           type="email"
                           value={form.email}
-                          onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
+                          onChange={(e) =>
+                            setForm((f) => ({ ...f, email: e.target.value }))
+                          }
                           placeholder="you@example.com"
                           autoComplete="email"
                           aria-invalid={Boolean(errors.email)}
-                          className="h-12 rounded-2xl border-border bg-background pl-10"
+                          className={cn(INPUT_CLS, "pl-10")}
                         />
                       </div>
-                      {errors.email && <p className="text-xs text-destructive">{errors.email}</p>}
+                      {errors.email && (
+                        <p className="text-xs text-destructive">{errors.email}</p>
+                      )}
                     </div>
                   </div>
 
@@ -823,7 +875,7 @@ export function BookingModal() {
                   {submitError && (
                     <div
                       role="alert"
-                      className="flex items-start gap-2.5 rounded-2xl border border-destructive/40 bg-red-50 p-3.5 text-sm text-destructive"
+                      className="flex items-start gap-2.5 rounded-xl border border-destructive/40 bg-red-50 p-3.5 text-sm text-destructive"
                     >
                       <TriangleAlert className="mt-0.5 size-4 shrink-0" aria-hidden />
                       {submitError}
@@ -831,7 +883,7 @@ export function BookingModal() {
                   )}
 
                   <Button
-                    className="mt-1 h-12 w-full rounded-full bg-gradient-to-r from-[#12588f] to-[#0f7f9c] text-[15px] font-semibold shadow-[0_10px_28px_rgb(18,88,143,0.35)] transition-all hover:opacity-95 disabled:bg-muted disabled:bg-none disabled:text-muted-foreground disabled:shadow-none"
+                    className={BTN_PRIMARY}
                     disabled={submitting}
                     onClick={() => void submit()}
                   >
@@ -859,79 +911,94 @@ export function BookingModal() {
                   initial="initial"
                   animate="animate"
                   exit="exit"
-                  transition={{ duration: 0.3, ease: "easeOut" }}
-                  className="flex flex-col items-center gap-4 pb-2 pt-2 text-center"
+                  transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+                  className="flex flex-col items-center gap-5 pb-2 pt-3 text-center"
                 >
                   <div className="relative">
-                    {/* Confetti sparkles */}
+                    {/* Soft celebratory sparkles */}
                     {[
-                      { c: "bg-primary", x: "-34px", y: "-6px", d: 0.15 },
-                      { c: "bg-teal-400", x: "30px", y: "-14px", d: 0.2 },
-                      { c: "bg-green-400", x: "-22px", y: "26px", d: 0.28 },
-                      { c: "bg-sky-400", x: "26px", y: "22px", d: 0.24 },
-                      { c: "bg-primary", x: "0px", y: "-26px", d: 0.32 },
+                      { c: "bg-primary/70", x: "-34px", y: "-6px", d: 0.15 },
+                      { c: "bg-teal-400/80", x: "30px", y: "-14px", d: 0.2 },
+                      { c: "bg-green-400/80", x: "-22px", y: "26px", d: 0.28 },
+                      { c: "bg-sky-400/80", x: "26px", y: "22px", d: 0.24 },
+                      { c: "bg-primary/50", x: "0px", y: "-26px", d: 0.32 },
                     ].map((s, i) => (
                       <motion.span
                         key={i}
                         initial={{ opacity: 0, scale: 0, x: 0, y: 0 }}
-                        animate={{ opacity: [0, 1, 0.9], scale: [0, 1.15, 0.85], x: s.x, y: s.y }}
+                        animate={{
+                          opacity: [0, 1, 0.9],
+                          scale: [0, 1.15, 0.85],
+                          x: s.x,
+                          y: s.y,
+                        }}
                         transition={{ delay: 0.25 + s.d, duration: 0.5, ease: "easeOut" }}
-                        className={`absolute left-1/2 top-1/2 size-2.5 rounded-full ${s.c}`}
+                        className={`absolute left-1/2 top-1/2 size-2 rounded-full ${s.c}`}
                         aria-hidden
                       />
                     ))}
                     <motion.div
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
-                      transition={{ type: "spring", stiffness: 260, damping: 16, delay: 0.05 }}
-                      className="flex size-20 items-center justify-center rounded-full bg-green-100 shadow-[0_12px_32px_rgb(22,163,74,0.25)]"
+                      transition={{
+                        type: "spring",
+                        stiffness: 260,
+                        damping: 16,
+                        delay: 0.05,
+                      }}
+                      className="flex size-20 items-center justify-center rounded-full bg-green-50 ring-8 ring-green-100/60"
                     >
-                      <CheckCircle2 className="size-12 text-green-600" aria-hidden />
+                      <CheckCircle2 className="size-10 text-green-600" aria-hidden />
                     </motion.div>
                   </div>
 
                   <div>
                     <h3 className="font-display text-2xl font-semibold text-foreground">
-                      Booking Confirmed!
+                      You&apos;re booked in!
                     </h3>
                     <p className="mt-1 text-sm text-muted-foreground">
-                      We&apos;ll call you shortly to confirm. Please arrive 10 minutes early.
+                      We&apos;ll call you shortly to confirm — please arrive 10
+                      minutes early.
                     </p>
                   </div>
 
-                  <dl className="w-full flex-col gap-2.5 rounded-2xl border border-border/70 bg-secondary/50 p-4 text-left text-sm sm:flex">
-                    <div className="flex justify-between gap-4">
+                  <dl className="w-full divide-y divide-border/60 overflow-hidden rounded-2xl border border-border/70 bg-secondary/40 text-left">
+                    <div className="flex items-center justify-between gap-4 px-4 py-2.5 text-sm">
                       <dt className="text-muted-foreground">Name</dt>
-                      <dd className="font-semibold text-foreground">{confirmed.name}</dd>
+                      <dd className="truncate font-semibold text-foreground">
+                        {confirmed.name}
+                      </dd>
                     </div>
-                    <div className="flex justify-between gap-4">
-                      <dt className="text-muted-foreground">Purpose</dt>
-                      <dd className="max-w-52 truncate text-right font-semibold text-foreground">
+                    <div className="flex items-center justify-between gap-4 px-4 py-2.5 text-sm">
+                      <dt className="shrink-0 text-muted-foreground">Purpose</dt>
+                      <dd className="max-w-52 truncate font-semibold text-foreground">
                         {confirmed.service}
                       </dd>
                     </div>
-                    <div className="flex justify-between gap-4">
-                      <dt className="text-muted-foreground">Date</dt>
-                      <dd className="font-semibold text-foreground">
+                    <div className="flex items-center justify-between gap-4 px-4 py-2.5 text-sm">
+                      <dt className="shrink-0 text-muted-foreground">Date</dt>
+                      <dd className="text-right font-semibold text-foreground">
                         {prettyDate(confirmed.date)}
                       </dd>
                     </div>
-                    <div className="flex justify-between gap-4">
-                      <dt className="text-muted-foreground">Time</dt>
-                      <dd className="font-semibold text-foreground">{confirmed.timeSlot}</dd>
+                    <div className="flex items-center justify-between gap-4 px-4 py-2.5 text-sm">
+                      <dt className="shrink-0 text-muted-foreground">Time</dt>
+                      <dd className="font-semibold text-foreground">
+                        {confirmed.timeSlot}
+                      </dd>
                     </div>
                   </dl>
 
                   <div className="flex w-full flex-col gap-2.5 sm:flex-row">
                     <Button
-                      className="h-12 flex-1 rounded-full bg-gradient-to-r from-[#12588f] to-[#0f7f9c] text-[15px] font-semibold shadow-[0_10px_28px_rgb(18,88,143,0.35)] transition-all hover:opacity-95 disabled:bg-muted disabled:bg-none disabled:text-muted-foreground disabled:shadow-none"
+                      className={cn(BTN_PRIMARY, "flex-1")}
                       onClick={closeBooking}
                     >
                       Done
                     </Button>
                     <Button
                       variant="outline"
-                      className="h-12 flex-1 rounded-full text-[15px] font-semibold"
+                      className="h-12 w-full flex-1 rounded-xl text-[15px] font-semibold"
                       onClick={() => {
                         setConfirmed(null);
                         setReason("");
