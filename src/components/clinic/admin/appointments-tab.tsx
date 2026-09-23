@@ -8,6 +8,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Inbox,
+  ListOrdered,
   MessageSquareText,
   MoreHorizontal,
   Phone,
@@ -220,6 +221,9 @@ export function AppointmentsTab({ pin, onUnauthorized, onDataChanged }: Appointm
 
   const totalPages = data ? Math.max(1, Math.ceil(data.total / data.pageSize)) : 1;
   const counts = data?.counts;
+  /** Queue number across pages — the API returns oldest-first (FIFO). */
+  const queueNo = (index: number) =>
+    data ? (data.page - 1) * data.pageSize + index + 1 : index + 1;
 
   return (
     <div className="flex flex-col gap-5">
@@ -330,6 +334,12 @@ export function AppointmentsTab({ pin, onUnauthorized, onDataChanged }: Appointm
             );
           })}
         </div>
+
+        {/* Queue rule hint */}
+        <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+          <ListOrdered className="size-3.5 shrink-0 text-primary" aria-hidden />
+          Queue order — first come, first served. The earliest booking sits on top.
+        </p>
       </div>
 
       {/* Content */}
@@ -357,10 +367,11 @@ export function AppointmentsTab({ pin, onUnauthorized, onDataChanged }: Appointm
         <>
           {/* Mobile: stacked cards */}
           <div className="flex flex-col gap-3 md:hidden">
-            {data.appointments.map((appt) => (
+            {data.appointments.map((appt, i) => (
               <AppointmentCard
                 key={appt.id}
                 appt={appt}
+                queueNo={queueNo(i)}
                 busy={actionId === appt.id}
                 onStatus={(next) => void patchStatus(appt, next)}
                 onDelete={() => setDeleteTarget(appt)}
@@ -373,7 +384,8 @@ export function AppointmentsTab({ pin, onUnauthorized, onDataChanged }: Appointm
             <Table>
               <TableHeader>
                 <TableRow className="bg-secondary/50 hover:bg-secondary/50">
-                  <TableHead className="pl-5">Patient</TableHead>
+                  <TableHead className="pl-5">#</TableHead>
+                  <TableHead>Patient</TableHead>
                   <TableHead>Service</TableHead>
                   <TableHead>Date & Time</TableHead>
                   <TableHead>Message</TableHead>
@@ -383,9 +395,14 @@ export function AppointmentsTab({ pin, onUnauthorized, onDataChanged }: Appointm
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {data.appointments.map((appt) => (
+                {data.appointments.map((appt, i) => (
                   <TableRow key={appt.id} className="align-top">
-                    <TableCell className="pl-5">
+                    <TableCell className="pl-5 pt-5">
+                      <span className="inline-flex size-7 items-center justify-center rounded-full bg-primary/10 font-display text-xs font-bold tabular-nums text-primary">
+                        {queueNo(i)}
+                      </span>
+                    </TableCell>
+                    <TableCell>
                       <p className="font-semibold text-foreground">{appt.name}</p>
                       <a
                         href={`tel:${appt.phone.replace(/\s/g, "")}`}
@@ -615,27 +632,33 @@ function RowActions({ appt, busy, onStatus, onDelete }: RowActionsProps) {
 
 interface AppointmentCardProps {
   appt: AdminAppointment;
+  queueNo: number;
   busy: boolean;
   onStatus: (next: AppointmentStatus) => void;
   onDelete: () => void;
 }
 
-function AppointmentCard({ appt, busy, onStatus, onDelete }: AppointmentCardProps) {
+function AppointmentCard({ appt, queueNo, busy, onStatus, onDelete }: AppointmentCardProps) {
   const [expanded, setExpanded] = useState(false);
   const longMessage = (appt.message?.length ?? 0) > 72;
 
   return (
     <div className="rounded-3xl border border-border/60 bg-card p-4 shadow-[0_8px_30px_rgb(18,88,143,0.06)]">
       <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="truncate font-semibold text-foreground">{appt.name}</p>
-          <a
-            href={`tel:${appt.phone.replace(/\s/g, "")}`}
-            className="mt-0.5 inline-flex items-center gap-1 text-xs text-primary"
-          >
-            <Phone className="size-3" aria-hidden />
-            {appt.phone}
-          </a>
+        <div className="flex min-w-0 items-start gap-2.5">
+          <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 font-display text-xs font-bold tabular-nums text-primary">
+            {queueNo}
+          </span>
+          <div className="min-w-0">
+            <p className="truncate font-semibold text-foreground">{appt.name}</p>
+            <a
+              href={`tel:${appt.phone.replace(/\s/g, "")}`}
+              className="mt-0.5 inline-flex items-center gap-1 text-xs text-primary"
+            >
+              <Phone className="size-3" aria-hidden />
+              {appt.phone}
+            </a>
+          </div>
         </div>
         <RowActions appt={appt} busy={busy} onStatus={onStatus} onDelete={onDelete} />
       </div>

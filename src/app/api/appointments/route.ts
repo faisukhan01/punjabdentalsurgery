@@ -3,12 +3,41 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { isAdminRequest, unauthorized } from "@/lib/admin";
 import {
-  TIME_SLOTS,
   clinicTodayStr,
   isClosedDay,
 } from "@/lib/clinic";
 
 export const dynamic = "force-dynamic";
+
+/* ----------------------------- Slot helpers ----------------------------- */
+// Time slots are free-form labels like "5:00 PM", "6:45 PM" — patients pick
+// from the dropdown (30-min grid) or type a custom time. Internally we work
+// in minutes-since-midnight so custom times never collide with booked slots.
+
+const CLINIC_OPEN_MIN = 17 * 60; // 5:00 PM
+const CLINIC_CLOSE_MIN = 24 * 60; // 12:00 AM (midnight)
+const SLOT_MINUTES = 30; // one appointment occupies half an hour
+
+/** "6:45 PM" -> 1145 (minutes since midnight), or null when malformed. */
+function parseSlotMinutes(raw: string): number | null {
+  const m = /^(\d{1,2}):(\d{2})\s*([AP])M$/i.exec(raw.trim());
+  if (!m) return null;
+  const h12 = parseInt(m[1], 10);
+  const min = parseInt(m[2], 10);
+  if (h12 < 1 || h12 > 12 || min > 59) return null;
+  const pm = m[3].toUpperCase() === "P";
+  const h24 = (h12 % 12) + (pm ? 12 : 0);
+  return h24 * 60 + min;
+}
+
+/** 1145 -> "7:45 PM" (canonical label stored in the DB). */
+function minutesToSlotLabel(mins: number): string {
+  const h24 = Math.floor(mins / 60);
+  const min = mins % 60;
+  const ampm = h24 >= 12 ? "PM" : "AM";
+  const h12 = h24 % 12 === 0 ? 12 : h24 % 12;
+  return `${h12}:${String(min).padStart(2, "0")} ${ampm}`;
+}
 
 /* ----------------------------- POST /api/appointments ----------------------------- */
 // Public endpoint - patients submit a booking request.
@@ -20,14 +49,22 @@ const createSchema = z.object({
     .trim()
     .regex(/^[+]?[0-9\s-]{10,16}$/, "Please enter a valid phone number"),
   email: z.union([z.email(), z.literal("")]).optional(),
-  // Purpose of visit — free text so patients can describe their own reason
-  // (a quick-pick chip on the frontend also lands here).
-  service: z.string().trim().min(2).max(120),
+  // Purpose of visit — free text in the patient's own words.
+  service: z.string().trim().min(2).max(300),
   date: z
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format")
     .refine((d) => !Number.isNaN(new Date(`${d}T12:00:00Z`).getTime()), "Invalid date"),
-  timeSlot: z.enum(TIME_SLOTS),
+  // Dropdown slot ("5:30 PM") or a manually typed time ("6:45 pm") —
+  // canonicalised to "6:45 PM" and range-checked against clinic hours.
+  timeSlot: z
+    .string()
+    .trim()
+    .min(3)
+    .max(20)
+    .transform((s) => s.replace(/\s+/g, " "))
+    .refine((s) => parseSlotMinutes(s) !== null, "Please pick a valid time slot")
+    .transform((s) => minutesToSlotLabel(parseSlotMinutes(s) as number)),
   message: z.string().trim().max(500).optional(),
 });
 
@@ -59,14 +96,28 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Prevent double-booking of the same slot (cancelled appointments free the slot).
-    const clash = await db.appointment.findFirst({
-      where: { date, timeSlot, status: { not: "CANCELLED" } },
-      select: { id: true },
-    });
-    if (clash) {
+    // Clinic hours: 5:00 PM – 12:00 AM (custom times must stay inside).
+    const requested = parseSlotMinutes(timeSlot) as number;
+    if (requested < CLINIC_OPEN_MIN || requested >= CLINIC_CLOSE_MIN) {
       return NextResponse.json(
-        { error: "Sorry, that time slot has just been booked. Please choose another slot." },
+        { error: "The clinic opens at 5:00 PM — please choose a time between 5:00 PM and 12:00 AM." },
+        { status: 400 }
+      );
+    }
+
+    // Overlap guard: every appointment occupies a 30-minute window, so a new
+    // booking (dropdown or custom time) must not fall inside an existing one.
+    const sameDay = await db.appointment.findMany({
+      where: { date, status: { not: "CANCELLED" } },
+      select: { timeSlot: true },
+    });
+    const conflict = sameDay.some((a) => {
+      const m = parseSlotMinutes(a.timeSlot);
+      return m !== null && Math.abs(m - requested) < SLOT_MINUTES;
+    });
+    if (conflict) {
+      return NextResponse.json(
+        { error: "Sorry, that time is too close to another booking. Please choose another slot." },
         { status: 409 }
       );
     }
@@ -108,6 +159,7 @@ export async function POST(req: NextRequest) {
 
 /* ------------------------------ GET /api/appointments ----------------------------- */
 // Admin endpoint - list appointments with filters + status counts.
+// Queue rule: first come, first served — whoever booked first sits on top.
 
 export async function GET(req: NextRequest) {
   if (!isAdminRequest(req)) return unauthorized();
@@ -136,7 +188,7 @@ export async function GET(req: NextRequest) {
     const [appointments, total, pending, confirmed, completed, cancelled] = await Promise.all([
       db.appointment.findMany({
         where,
-        orderBy: [{ date: "desc" }, { timeSlot: "asc" }, { createdAt: "desc" }],
+        orderBy: { createdAt: "asc" },
         skip: (page - 1) * pageSize,
         take: pageSize,
       }),

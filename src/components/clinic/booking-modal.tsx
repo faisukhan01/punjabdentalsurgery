@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { format, parseISO } from "date-fns";
 import {
@@ -12,17 +12,12 @@ import {
   Clock,
   Loader2,
   Mail,
-  MoonStar,
   NotebookPen,
+  PenLine,
   Phone,
   ShieldCheck,
-  Sparkles,
-  Smile,
-  Stethoscope,
-  SunMedium,
   TriangleAlert,
   User,
-  Zap,
 } from "lucide-react";
 import {
   Dialog,
@@ -31,6 +26,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectSeparator,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -69,19 +72,9 @@ interface ConfirmedAppointment {
   status: string;
 }
 
-const STEP_LABELS = ["Purpose", "Date & Time", "Details", "Done"] as const;
-
-const MORNING_SLOTS = TIME_SLOTS.slice(0, 8) as readonly string[];
-const EVENING_SLOTS = TIME_SLOTS.slice(8) as readonly string[];
-
-/* Quick one-tap purposes — a short, friendly starting point. Patients can
-   always describe their own reason instead. */
-const QUICK_PURPOSES = [
-  { value: "General Consultation", icon: Stethoscope, hint: "Exam & advice" },
-  { value: "Tooth Pain / Emergency", icon: Zap, hint: "Fast relief" },
-  { value: "Cleaning & Scaling", icon: Sparkles, hint: "Polish & shine" },
-  { value: "Braces & Cosmetic", icon: Smile, hint: "Straighten & glow" },
-] as const;
+const STEP_LABELS = ["Purpose", "Date & Time", "Details"] as const;
+const CUSTOM_SLOT = "__custom__";
+const PURPOSE_MAX = 300;
 
 const emptyForm: BookingForm = { name: "", phone: "", email: "", message: "" };
 
@@ -111,6 +104,18 @@ function maxDateStr(): string {
     .slice(0, 10);
 }
 
+/** Native 24h time ("18:45") -> 12h label ("6:45 PM"), or null. */
+function fmt24to12(value: string): string | null {
+  const m = /^([01]?\d|2[0-3]):([0-5]\d)$/.exec(value.trim());
+  if (!m) return null;
+  let h = parseInt(m[1], 10);
+  const min = m[2];
+  const ampm = h >= 12 ? "PM" : "AM";
+  h = h % 12;
+  if (h === 0) h = 12;
+  return `${h}:${min} ${ampm}`;
+}
+
 /* ------------------------------ Component ----------------------------- */
 
 export function BookingModal() {
@@ -122,10 +127,10 @@ export function BookingModal() {
   const [step, setStep] = useState<Step>(1);
   const [dir, setDir] = useState<1 | -1>(1);
 
-  const [service, setService] = useState<string | null>(null);
   const [purposeText, setPurposeText] = useState("");
   const [date, setDate] = useState("");
   const [slot, setSlot] = useState<string | null>(null);
+  const [customTime, setCustomTime] = useState("");
   const [availability, setAvailability] = useState<Availability | null>(null);
   const [availLoading, setAvailLoading] = useState(false);
 
@@ -138,12 +143,33 @@ export function BookingModal() {
   const todayStr = useMemo(() => clinicTodayStr(), []);
   const maxDate = useMemo(() => maxDateStr(), []);
 
-  /** The purpose we ultimately send: a quick chip or the visitor's own words. */
+  /** The purpose we send: the visitor's own words (required). */
   const effectiveService = useMemo(() => {
-    if (service) return service;
     const t = purposeText.trim();
-    return t.length >= 3 ? t.slice(0, 120) : null;
-  }, [service, purposeText]);
+    return t.length >= 3 ? t.slice(0, PURPOSE_MAX) : null;
+  }, [purposeText]);
+
+  /** Resolved time slot: a dropdown label or the custom time as "6:45 PM". */
+  const effectiveSlot = useMemo(() => {
+    if (!slot) return null;
+    if (slot !== CUSTOM_SLOT) return slot;
+    return fmt24to12(customTime);
+  }, [slot, customTime]);
+
+  const customOutOfRange = useMemo(() => {
+    if (slot !== CUSTOM_SLOT || !customTime) return false;
+    const label = fmt24to12(customTime);
+    if (!label) return true;
+    const m = /^(\d{1,2}):(\d{2})\s*([AP]M)$/.exec(label);
+    if (!m) return true;
+    let h = parseInt(m[1], 10);
+    const min = parseInt(m[2], 10);
+    if (h === 12) h = 0;
+    const mins = (m[3] === "PM" ? 720 : 0) + h * 60 + min;
+    return mins < 17 * 60 || mins >= 24 * 60;
+  }, [slot, customTime]);
+
+  const slotTaken = Boolean(effectiveSlot && availability?.taken.includes(effectiveSlot));
 
   /* ---------- Availability fetching ---------- */
   const loadAvailability = useCallback(async (dateStr: string) => {
@@ -172,16 +198,16 @@ export function BookingModal() {
     if (!bookingOpen) return;
     const pre =
       preselectedService && preselectedService.trim().length >= 3
-        ? preselectedService.trim().slice(0, 120)
-        : null;
+        ? preselectedService.trim().slice(0, PURPOSE_MAX)
+        : "";
     setDir(1);
-    setService(pre);
-    setPurposeText("");
+    setPurposeText(pre);
     setStep(pre ? 2 : 1);
     // Prefill today's date so patients see open slots immediately.
     const today = clinicTodayStr();
     setDate(today);
     setSlot(null);
+    setCustomTime("");
     setAvailability(null);
     void loadAvailability(today);
     setForm(emptyForm);
@@ -193,6 +219,7 @@ export function BookingModal() {
   const handleDateChange = (value: string) => {
     setDate(value);
     setSlot(null);
+    setCustomTime("");
     setAvailability(null);
     if (value) void loadAvailability(value);
   };
@@ -222,7 +249,7 @@ export function BookingModal() {
   };
 
   const submit = async () => {
-    if (!effectiveService || !date || !slot || !validateForm()) return;
+    if (!effectiveService || !date || !effectiveSlot || !validateForm()) return;
     setSubmitting(true);
     setSubmitError(null);
     try {
@@ -235,18 +262,19 @@ export function BookingModal() {
           email: form.email.trim() || undefined,
           service: effectiveService,
           date,
-          timeSlot: slot,
+          timeSlot: effectiveSlot,
           message: form.message.trim() || undefined,
         }),
       });
 
       if (res.status === 409) {
         setSlot(null);
+        setCustomTime("");
         void loadAvailability(date);
         goTo(2);
         toast({
           variant: "destructive",
-          title: "That slot was just booked",
+          title: "That time was just booked",
           description: "Someone grabbed it before you — please pick another time.",
         });
         return;
@@ -268,9 +296,7 @@ export function BookingModal() {
       goTo(4);
       toast({
         title: "Booking confirmed 🎉",
-        description: `${data.appointment.service} — ${prettyDate(
-          data.appointment.date
-        )} at ${data.appointment.timeSlot}.`,
+        description: `${prettyDate(data.appointment.date)} at ${data.appointment.timeSlot}.`,
       });
     } catch {
       setSubmitError("Network error — please check your connection and try again.");
@@ -279,46 +305,9 @@ export function BookingModal() {
     }
   };
 
-  /* ---------- Render helpers ---------- */
+  /* ---------- Step rail ---------- */
 
-  const slotButtonClass = (s: string) => {
-    const taken = availability?.taken.includes(s) ?? false;
-    const selected = slot === s;
-    if (selected)
-      return "border-transparent bg-gradient-to-br from-[#12588f] to-[#0f7f9c] text-white shadow-[0_8px_20px_rgb(18,88,143,0.35)]";
-    if (taken) return "border-border/60 bg-muted text-muted-foreground/60 line-through";
-    return "border-border bg-card text-foreground hover:border-primary/50 hover:bg-secondary";
-  };
-
-  const renderSlotGroup = (label: string, icon: ReactNode, slots: readonly string[]) => (
-    <div>
-      <p className="mb-2 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
-        {icon}
-        {label}
-      </p>
-      <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
-        {slots.map((s) => {
-          const taken = availability?.taken.includes(s) ?? false;
-          return (
-            <button
-              key={s}
-              type="button"
-              disabled={!availability || taken}
-              onClick={() => setSlot(s)}
-              aria-pressed={slot === s}
-              aria-label={`${s}${taken ? " (booked)" : ""}`}
-              className={`flex min-h-[44px] flex-col items-center justify-center rounded-xl border px-1 py-2 text-[13px] font-medium transition-all ${slotButtonClass(
-                s
-              )}`}
-            >
-              <span>{s}</span>
-              {taken && <span className="text-[10px] no-underline">Booked</span>}
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
+  const railStep = Math.min(step, 3) as 1 | 2 | 3;
 
   return (
     <Dialog open={bookingOpen} onOpenChange={(open) => !open && closeBooking()}>
@@ -329,101 +318,97 @@ export function BookingModal() {
           fixed inset-x-0 bottom-0 top-auto left-0 right-0
           translate-x-0 translate-y-0
           max-h-[94svh] w-full sm:max-w-lg
-          rounded-t-[1.75rem] sm:rounded-[1.75rem]
+          rounded-t-[2rem] sm:rounded-[2rem]
           sm:inset-x-auto sm:bottom-auto sm:left-1/2 sm:top-1/2 sm:right-auto
           sm:-translate-x-1/2 sm:-translate-y-1/2
           sm:max-h-[92svh]
-          border-border/50 shadow-[0_24px_80px_rgb(4,24,43,0.45)]
+          border-border/60 shadow-[0_32px_90px_rgb(9,30,54,0.4)]
           data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95
         `}
       >
         <div className="scrollbar-thin max-h-[94svh] overflow-y-auto sm:max-h-[92svh]">
-          {/* ------------------------- Gradient header band ------------------------- */}
-          <div className="relative overflow-hidden bg-gradient-to-br from-[#0c3054] via-[#12588f] to-[#0f7f9c] px-5 pb-5 pt-6 text-white sm:px-7">
-            {/* Decorative glows */}
-            <div
-              className="pointer-events-none absolute -right-14 -top-16 size-44 rounded-full bg-white/10 blur-2xl"
-              aria-hidden
-            />
-            <div
-              className="pointer-events-none absolute -left-10 bottom-[-52px] size-36 rounded-full bg-teal-300/20 blur-2xl"
+          {/* ------------------------- Header ------------------------- */}
+          <div className="relative border-b border-border/70 bg-gradient-to-b from-secondary/70 to-background px-5 pb-4 pt-5 sm:px-7">
+            {/* Mobile grab handle */}
+            <span
+              className="absolute left-1/2 top-2 h-1 w-10 -translate-x-1/2 rounded-full bg-border sm:hidden"
               aria-hidden
             />
 
-            {/* Custom close */}
             <button
               type="button"
               onClick={closeBooking}
               aria-label="Close booking dialog"
-              className="absolute right-4 top-4 flex size-9 items-center justify-center rounded-full bg-white/10 text-white/90 transition-colors hover:bg-white/25 hover:text-white"
+              className="absolute right-3.5 top-3.5 flex size-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             >
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="size-4" aria-hidden>
                 <path d="M18 6 6 18M6 6l12 12" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </button>
 
-            <DialogHeader className="gap-1.5 text-left">
-              <DialogTitle className="flex items-center gap-3 pr-8 font-display text-xl text-white sm:text-[1.35rem]">
-                <span className="flex size-11 items-center justify-center rounded-2xl bg-white/15 shadow-inner ring-1 ring-white/25">
-                  <CalendarCheck className="size-5" aria-hidden />
+            <DialogHeader className="gap-0 pt-2 text-left sm:pt-0">
+              <div className="flex items-center gap-3.5 pr-8">
+                <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#12588f] to-[#0f7f9c] text-white shadow-[0_10px_24px_rgb(18,88,143,0.35)]">
+                  <CalendarCheck className="size-5.5" aria-hidden />
                 </span>
-                <span className="flex flex-col">
-                  Book Your Appointment
-                  <span className="text-[11px] font-medium uppercase tracking-[0.22em] text-sky-200/90">
-                    Punjab Dental Surgery
-                  </span>
-                </span>
-              </DialogTitle>
-              <DialogDescription className="text-[13px] leading-relaxed text-sky-100/80">
-                Under a minute — tell us why you&apos;re coming, pick a time, done.
-              </DialogDescription>
+                <div className="min-w-0">
+                  <DialogTitle className="font-display text-[1.3rem] font-semibold leading-tight text-foreground">
+                    Book an appointment
+                  </DialogTitle>
+                  <DialogDescription className="mt-0.5 truncate text-[13px] text-muted-foreground">
+                    Punjab Dental Surgery · Johar Town, Lahore
+                  </DialogDescription>
+                </div>
+              </div>
             </DialogHeader>
 
-            {/* Progress */}
-            <div className="mt-4">
-              <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/20">
-                <motion.div
-                  className="h-full rounded-full bg-white shadow-[0_0_12px_rgba(255,255,255,0.8)]"
-                  initial={false}
-                  animate={{ width: `${(step / 4) * 100}%` }}
-                  transition={{ duration: 0.4, ease: "easeOut" }}
-                />
-              </div>
-              <ol className="mt-2.5 flex items-center justify-between" aria-label="Booking steps">
-                {STEP_LABELS.map((label, i) => {
-                  const n = (i + 1) as Step;
-                  const active = n === step;
-                  const done = n < step;
-                  return (
-                    <li
-                      key={label}
-                      className={`flex items-center gap-1.5 text-[11px] font-semibold sm:text-xs ${
-                        active || done ? "text-white" : "text-sky-200/60"
+            {/* Step rail */}
+            <ol className="mt-4 flex items-center gap-2" aria-label="Booking steps">
+              {STEP_LABELS.map((label, i) => {
+                const n = (i + 1) as 1 | 2 | 3;
+                const active = n === railStep && step !== 4;
+                const done = n < railStep || step === 4;
+                return (
+                  <li key={label} className="contents">
+                    <span
+                      className={`flex items-center gap-2 ${
+                        n === 3 ? "shrink-0" : ""
                       }`}
                       aria-current={active ? "step" : undefined}
                     >
-                      {done ? (
-                        <span className="flex size-4 items-center justify-center rounded-full bg-white text-[#12588f]">
-                          <Check className="size-2.5" strokeWidth={3.5} aria-hidden />
-                        </span>
-                      ) : (
-                        <span
-                          className={`size-2 rounded-full ${
-                            active ? "bg-white shadow-[0_0_8px_rgba(255,255,255,0.9)]" : "bg-white/35"
-                          }`}
-                          aria-hidden
-                        />
-                      )}
-                      {label}
-                    </li>
-                  );
-                })}
-              </ol>
-            </div>
+                      <span
+                        className={`flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-bold transition-all ${
+                          done
+                            ? "bg-primary/10 text-primary"
+                            : active
+                              ? "bg-gradient-to-br from-[#12588f] to-[#0f7f9c] text-white shadow-[0_6px_16px_rgb(18,88,143,0.35)]"
+                              : "border border-border bg-card text-muted-foreground"
+                        }`}
+                      >
+                        {done ? <Check className="size-3.5" strokeWidth={3} aria-hidden /> : n}
+                      </span>
+                      <span
+                        className={`hidden text-[11px] font-bold uppercase tracking-[0.14em] sm:inline ${
+                          done || active ? "text-foreground" : "text-muted-foreground"
+                        }`}
+                      >
+                        {label}
+                      </span>
+                    </span>
+                    {n < 3 && (
+                      <span
+                        className={`h-px flex-1 ${done ? "bg-primary/40" : "bg-border"}`}
+                        aria-hidden
+                      />
+                    )}
+                  </li>
+                );
+              })}
+            </ol>
           </div>
 
           {/* ------------------------------ Steps body ------------------------------ */}
-          <div className="bg-gradient-to-b from-secondary/40 to-background p-5 sm:p-7">
+          <div className="bg-card px-5 py-6 sm:px-7">
             <AnimatePresence mode="wait" custom={dir} initial={false}>
               {/* --------------------------- STEP 1: PURPOSE --------------------------- */}
               {step === 1 && (
@@ -437,87 +422,48 @@ export function BookingModal() {
                   transition={{ duration: 0.3, ease: "easeOut" }}
                   className="flex flex-col gap-4"
                 >
-                  <div>
-                    <h3 className="font-display text-lg font-semibold text-foreground">
-                      What brings you in?
-                    </h3>
-                    <p className="text-sm text-muted-foreground">
-                      Pick a common reason — or write your own below.
-                    </p>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2.5">
-                    {QUICK_PURPOSES.map((p) => {
-                      const selected = service === p.value;
-                      return (
-                        <button
-                          key={p.value}
-                          type="button"
-                          onClick={() => {
-                            setService(selected ? null : p.value);
-                            setPurposeText("");
-                          }}
-                          aria-pressed={selected}
-                          className={`flex min-h-[76px] flex-col justify-center gap-1 rounded-2xl border p-3 text-left transition-all ${
-                            selected
-                              ? "border-primary bg-secondary shadow-[0_8px_24px_rgb(18,88,143,0.2)] ring-2 ring-primary/25"
-                              : "border-border bg-card hover:border-primary/40 hover:bg-secondary/50"
-                          }`}
-                        >
-                          <span className="flex items-center gap-2">
-                            <span
-                              className={`flex size-8 shrink-0 items-center justify-center rounded-xl transition-colors ${
-                                selected
-                                  ? "bg-primary text-primary-foreground"
-                                  : "bg-secondary text-primary"
-                              }`}
-                            >
-                              <p.icon className="size-4" aria-hidden />
-                            </span>
-                            <span className="text-[13px] font-semibold leading-tight text-foreground">
-                              {p.value}
-                            </span>
-                          </span>
-                          <span className="pl-10 text-[11px] text-muted-foreground">{p.hint}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-
-                  {/* Divider — "or" */}
-                  <div className="flex items-center gap-3" aria-hidden>
-                    <span className="h-px flex-1 bg-border" />
-                    <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                      or write your own
+                  <div className="flex items-start gap-3">
+                    <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-xl bg-secondary text-primary">
+                      <NotebookPen className="size-4" aria-hidden />
                     </span>
-                    <span className="h-px flex-1 bg-border" />
+                    <div>
+                      <h3 className="font-display text-lg font-semibold leading-snug text-foreground">
+                        Purpose of visit / consultation
+                      </h3>
+                      <p className="text-sm text-muted-foreground">
+                        Write your reason in your own words.
+                      </p>
+                    </div>
                   </div>
 
                   <div className="flex flex-col gap-1.5">
-                    <Label htmlFor="booking-purpose" className="flex items-center gap-1.5">
-                      <NotebookPen className="size-3.5 text-primary" aria-hidden />
+                    <Label htmlFor="booking-purpose" className="sr-only">
                       Purpose of visit / consultation
                     </Label>
                     <Textarea
                       id="booking-purpose"
                       value={purposeText}
-                      onChange={(e) => {
-                        setPurposeText(e.target.value);
-                        setService(null);
-                      }}
-                      placeholder="Tell us in your own words — e.g. root canal follow-up, teeth whitening, kids' checkup…"
-                      rows={3}
-                      className="resize-none rounded-2xl border-border bg-card"
+                      onChange={(e) => setPurposeText(e.target.value)}
+                      maxLength={PURPOSE_MAX}
+                      rows={5}
+                      className="min-h-32 resize-none rounded-2xl border-border bg-background text-[15px] leading-relaxed"
                     />
-                    {purposeText.trim().length > 0 && purposeText.trim().length < 3 && (
-                      <p className="text-xs text-destructive">
-                        Please write at least a few letters.
-                      </p>
-                    )}
+                    <div className="flex items-center justify-between text-xs">
+                      {purposeText.trim().length > 0 && purposeText.trim().length < 3 ? (
+                        <p className="text-destructive">Please write a little more.</p>
+                      ) : (
+                        <span className="text-muted-foreground/70">
+                          The doctor will review this before your visit.
+                        </span>
+                      )}
+                      <span className="tabular-nums text-muted-foreground/60">
+                        {purposeText.length}/{PURPOSE_MAX}
+                      </span>
+                    </div>
                   </div>
 
                   <Button
-                    className="mt-1 h-12 rounded-full bg-gradient-to-r from-[#12588f] to-[#0f7f9c] text-[15px] font-semibold shadow-[0_10px_28px_rgb(18,88,143,0.35)] transition-opacity hover:opacity-95"
+                    className="mt-1 h-12 w-full rounded-full bg-gradient-to-r from-[#12588f] to-[#0f7f9c] text-[15px] font-semibold shadow-[0_10px_28px_rgb(18,88,143,0.35)] transition-all hover:opacity-95 disabled:bg-muted disabled:bg-none disabled:text-muted-foreground disabled:shadow-none"
                     disabled={!effectiveService}
                     onClick={() => goTo(2)}
                   >
@@ -540,15 +486,16 @@ export function BookingModal() {
                   className="flex flex-col gap-4"
                 >
                   <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <h3 className="font-display text-lg font-semibold text-foreground">
-                        Choose date &amp; time
-                      </h3>
-                      <p className="text-sm text-muted-foreground">
-                        {effectiveService && (
-                          <span className="font-medium text-primary">{effectiveService}</span>
-                        )}
-                      </p>
+                    <div className="flex items-start gap-3">
+                      <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-xl bg-secondary text-primary">
+                        <Clock className="size-4" aria-hidden />
+                      </span>
+                      <div>
+                        <h3 className="font-display text-lg font-semibold leading-snug text-foreground">
+                          Date &amp; time slot
+                        </h3>
+                        <p className="text-sm text-muted-foreground">Open every day, 5 PM – 12 AM.</p>
+                      </div>
                     </div>
                     <Button variant="ghost" size="sm" className="h-9 shrink-0" onClick={back}>
                       <ArrowLeft className="size-4" aria-hidden />
@@ -565,9 +512,92 @@ export function BookingModal() {
                       min={todayStr}
                       max={maxDate}
                       onChange={(e) => handleDateChange(e.target.value)}
-                      className="h-11 rounded-xl border-border bg-card"
+                      className="h-12 rounded-2xl border-border bg-background"
                     />
                   </div>
+
+                  <div className="flex flex-col gap-1.5">
+                    <Label htmlFor="booking-slot">Time slot</Label>
+                    <Select
+                      value={slot ?? undefined}
+                      onValueChange={(v) => {
+                        setSlot(v);
+                        if (v !== CUSTOM_SLOT) setCustomTime("");
+                      }}
+                      disabled={!date || availLoading || Boolean(availability?.closed || availability?.past)}
+                    >
+                      <SelectTrigger
+                        id="booking-slot"
+                        aria-label="Choose a time slot"
+                        className="h-12 w-full rounded-2xl border-border bg-background"
+                      >
+                        <SelectValue placeholder={date ? "Choose a time" : "Pick a date first"} />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-64 rounded-2xl">
+                        {TIME_SLOTS.map((s) => {
+                          const taken = availability?.taken.includes(s) ?? false;
+                          return (
+                            <SelectItem
+                              key={s}
+                              value={s}
+                              disabled={taken}
+                              className="rounded-xl"
+                            >
+                              <span className="flex items-center gap-2">
+                                {s}
+                                {taken && (
+                                  <span className="text-[11px] font-medium text-muted-foreground/60">
+                                    · booked
+                                  </span>
+                                )}
+                              </span>
+                            </SelectItem>
+                          );
+                        })}
+                        <SelectSeparator />
+                        <SelectItem value={CUSTOM_SLOT} className="rounded-xl">
+                          <span className="flex items-center gap-2 font-medium text-primary">
+                            <PenLine className="size-3.5" aria-hidden />
+                            Write a custom time…
+                          </span>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Custom time entry */}
+                  {slot === CUSTOM_SLOT && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      transition={{ duration: 0.25, ease: "easeOut" }}
+                      className="overflow-hidden"
+                    >
+                      <div className="flex flex-col gap-1.5 rounded-2xl border border-primary/25 bg-secondary/50 p-4">
+                        <Label htmlFor="booking-custom-time" className="text-[13px]">
+                          Your preferred time
+                        </Label>
+                        <Input
+                          id="booking-custom-time"
+                          type="time"
+                          value={customTime}
+                          min="17:00"
+                          max="23:45"
+                          step={300}
+                          onChange={(e) => setCustomTime(e.target.value)}
+                          className="h-12 rounded-2xl border-border bg-card"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Clinic hours: 5:00 PM – 12:00 AM. Any time in between works — e.g. 6:45 PM.
+                        </p>
+                        {customOutOfRange && customTime && (
+                          <p className="text-xs font-medium text-destructive">
+                            Please pick a time between 5:00 PM and 12:00 AM.
+                          </p>
+                        )}
+                      </div>
+                    </motion.div>
+                  )}
 
                   {date && availability?.closed && (
                     <div className="flex items-start gap-2.5 rounded-2xl border border-amber-300/70 bg-amber-50 p-3.5 text-sm text-amber-900">
@@ -583,41 +613,30 @@ export function BookingModal() {
                   )}
 
                   {date && availLoading && (
-                    <div className="flex flex-col gap-3">
-                      <Skeleton className="h-3.5 w-20" />
-                      <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
-                        {Array.from({ length: 8 }).map((_, i) => (
-                          <Skeleton key={i} className="h-[44px] rounded-xl" />
-                        ))}
-                      </div>
+                    <div className="flex flex-col gap-2">
+                      <Skeleton className="h-12 rounded-2xl" />
                     </div>
                   )}
 
-                  {date && availability && !availability.closed && !availability.past && !availLoading && (
-                    <div className="flex flex-col gap-4">
-                      {availability.taken.length >= TIME_SLOTS.length ? (
-                        <div className="flex items-start gap-2.5 rounded-2xl border border-amber-300/70 bg-amber-50 p-3.5 text-sm text-amber-900">
-                          <TriangleAlert className="mt-0.5 size-4 shrink-0 text-amber-500" aria-hidden />
-                          Every slot for {prettyDate(date)} is booked. Please try another day.
-                        </div>
-                      ) : (
-                        <>
-                          {renderSlotGroup("Morning", <SunMedium className="size-3.5" />, MORNING_SLOTS)}
-                          {renderSlotGroup("Evening", <MoonStar className="size-3.5" />, EVENING_SLOTS)}
-                        </>
-                      )}
-                    </div>
-                  )}
-
-                  {date && !availability && !availLoading && (
-                    <p className="text-sm text-muted-foreground">
-                      Select a date to see available times.
+                  {date && availability && !availLoading && !availability.closed && !availability.past && (
+                    <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <Check className="size-3.5 text-green-600" aria-hidden />
+                      {availability.taken.length >= TIME_SLOTS.length
+                        ? "All standard slots are booked for this day — you can still write a custom time."
+                        : "Booked times are greyed out in the list."}
                     </p>
                   )}
 
                   <Button
-                    className="mt-1 h-12 rounded-full bg-gradient-to-r from-[#12588f] to-[#0f7f9c] text-[15px] font-semibold shadow-[0_10px_28px_rgb(18,88,143,0.35)] transition-opacity hover:opacity-95"
-                    disabled={!date || !slot || Boolean(availability?.closed)}
+                    className="mt-1 h-12 w-full rounded-full bg-gradient-to-r from-[#12588f] to-[#0f7f9c] text-[15px] font-semibold shadow-[0_10px_28px_rgb(18,88,143,0.35)] transition-all hover:opacity-95 disabled:bg-muted disabled:bg-none disabled:text-muted-foreground disabled:shadow-none"
+                    disabled={
+                      !date ||
+                      !effectiveSlot ||
+                      customOutOfRange ||
+                      slotTaken ||
+                      Boolean(availability?.closed || availability?.past) ||
+                      availLoading
+                    }
                     onClick={() => goTo(3)}
                   >
                     Continue
@@ -639,11 +658,16 @@ export function BookingModal() {
                   className="flex flex-col gap-4"
                 >
                   <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <h3 className="font-display text-lg font-semibold text-foreground">
-                        Your details
-                      </h3>
-                      <p className="text-sm text-muted-foreground">We&apos;ll call to confirm.</p>
+                    <div className="flex items-start gap-3">
+                      <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-xl bg-secondary text-primary">
+                        <User className="size-4" aria-hidden />
+                      </span>
+                      <div>
+                        <h3 className="font-display text-lg font-semibold leading-snug text-foreground">
+                          Your details
+                        </h3>
+                        <p className="text-sm text-muted-foreground">We&apos;ll call to confirm.</p>
+                      </div>
                     </div>
                     <Button variant="ghost" size="sm" className="h-9 shrink-0" onClick={back}>
                       <ArrowLeft className="size-4" aria-hidden />
@@ -651,23 +675,32 @@ export function BookingModal() {
                     </Button>
                   </div>
 
-                  {/* Summary card (gradient border) */}
-                  <div className="rounded-2xl bg-gradient-to-br from-[#12588f] to-[#0f7f9c] p-px shadow-[0_10px_30px_rgb(18,88,143,0.15)]">
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 rounded-[calc(1rem-1px)] bg-card px-4 py-3 text-[13px] text-foreground">
-                      <span className="inline-flex items-center gap-1.5 font-semibold text-primary">
+                  {/* Summary card */}
+                  <dl className="flex flex-col gap-2.5 rounded-2xl border border-border/70 bg-secondary/50 px-4 py-3.5 text-[13px]">
+                    <div className="flex items-start justify-between gap-4">
+                      <dt className="flex shrink-0 items-center gap-1.5 text-muted-foreground">
                         <NotebookPen className="size-3.5" aria-hidden />
-                        <span className="max-w-44 truncate">{effectiveService}</span>
-                      </span>
-                      <span className="inline-flex items-center gap-1.5">
-                        <CalendarCheck className="size-3.5 text-primary" aria-hidden />
-                        {prettyDate(date)}
-                      </span>
-                      <span className="inline-flex items-center gap-1.5">
-                        <Clock className="size-3.5 text-primary" aria-hidden />
-                        {slot}
-                      </span>
+                        Purpose
+                      </dt>
+                      <dd className="line-clamp-2 text-right font-semibold text-foreground">
+                        {effectiveService}
+                      </dd>
                     </div>
-                  </div>
+                    <div className="flex items-center justify-between gap-4">
+                      <dt className="flex shrink-0 items-center gap-1.5 text-muted-foreground">
+                        <CalendarCheck className="size-3.5" aria-hidden />
+                        Date
+                      </dt>
+                      <dd className="font-semibold text-foreground">{prettyDate(date)}</dd>
+                    </div>
+                    <div className="flex items-center justify-between gap-4">
+                      <dt className="flex shrink-0 items-center gap-1.5 text-muted-foreground">
+                        <Clock className="size-3.5" aria-hidden />
+                        Time
+                      </dt>
+                      <dd className="font-semibold text-foreground">{effectiveSlot}</dd>
+                    </div>
+                  </dl>
 
                   <div className="flex flex-col gap-3.5">
                     <div className="flex flex-col gap-1.5">
@@ -684,7 +717,7 @@ export function BookingModal() {
                           placeholder="e.g. Ali Raza"
                           autoComplete="name"
                           aria-invalid={Boolean(errors.name)}
-                          className="h-11 rounded-xl border-border bg-card pl-10"
+                          className="h-12 rounded-2xl border-border bg-background pl-10"
                         />
                       </div>
                       {errors.name && <p className="text-xs text-destructive">{errors.name}</p>}
@@ -706,7 +739,7 @@ export function BookingModal() {
                           placeholder="03XX-XXXXXXX"
                           autoComplete="tel"
                           aria-invalid={Boolean(errors.phone)}
-                          className="h-11 rounded-xl border-border bg-card pl-10"
+                          className="h-12 rounded-2xl border-border bg-background pl-10"
                         />
                       </div>
                       {errors.phone && <p className="text-xs text-destructive">{errors.phone}</p>}
@@ -727,7 +760,7 @@ export function BookingModal() {
                           placeholder="you@example.com"
                           autoComplete="email"
                           aria-invalid={Boolean(errors.email)}
-                          className="h-11 rounded-xl border-border bg-card pl-10"
+                          className="h-12 rounded-2xl border-border bg-background pl-10"
                         />
                       </div>
                       {errors.email && <p className="text-xs text-destructive">{errors.email}</p>}
@@ -741,7 +774,7 @@ export function BookingModal() {
                         onChange={(e) => setForm((f) => ({ ...f, message: e.target.value }))}
                         placeholder="Anything the doctor should know? Pain, allergies, previous treatment…"
                         rows={3}
-                        className="resize-none rounded-xl border-border bg-card"
+                        className="resize-none rounded-2xl border-border bg-background"
                       />
                     </div>
                   </div>
@@ -762,7 +795,7 @@ export function BookingModal() {
                   )}
 
                   <Button
-                    className="mt-1 h-12 rounded-full bg-gradient-to-r from-[#12588f] to-[#0f7f9c] text-[15px] font-semibold shadow-[0_10px_28px_rgb(18,88,143,0.4)] transition-opacity hover:opacity-95"
+                    className="mt-1 h-12 w-full rounded-full bg-gradient-to-r from-[#12588f] to-[#0f7f9c] text-[15px] font-semibold shadow-[0_10px_28px_rgb(18,88,143,0.35)] transition-all hover:opacity-95 disabled:bg-muted disabled:bg-none disabled:text-muted-foreground disabled:shadow-none"
                     disabled={submitting}
                     onClick={() => void submit()}
                   >
@@ -830,34 +863,32 @@ export function BookingModal() {
                     </p>
                   </div>
 
-                  <div className="w-full rounded-2xl bg-gradient-to-br from-[#12588f] to-[#0f7f9c] p-px shadow-[0_10px_30px_rgb(18,88,143,0.15)]">
-                    <dl className="flex flex-col gap-2.5 rounded-[calc(1rem-1px)] bg-card p-4 text-left text-sm">
-                      <div className="flex justify-between gap-4">
-                        <dt className="text-muted-foreground">Name</dt>
-                        <dd className="font-semibold text-foreground">{confirmed.name}</dd>
-                      </div>
-                      <div className="flex justify-between gap-4">
-                        <dt className="text-muted-foreground">Purpose</dt>
-                        <dd className="max-w-52 truncate text-right font-semibold text-foreground">
-                          {confirmed.service}
-                        </dd>
-                      </div>
-                      <div className="flex justify-between gap-4">
-                        <dt className="text-muted-foreground">Date</dt>
-                        <dd className="font-semibold text-foreground">
-                          {prettyDate(confirmed.date)}
-                        </dd>
-                      </div>
-                      <div className="flex justify-between gap-4">
-                        <dt className="text-muted-foreground">Time</dt>
-                        <dd className="font-semibold text-foreground">{confirmed.timeSlot}</dd>
-                      </div>
-                    </dl>
-                  </div>
+                  <dl className="w-full flex-col gap-2.5 rounded-2xl border border-border/70 bg-secondary/50 p-4 text-left text-sm sm:flex">
+                    <div className="flex justify-between gap-4">
+                      <dt className="text-muted-foreground">Name</dt>
+                      <dd className="font-semibold text-foreground">{confirmed.name}</dd>
+                    </div>
+                    <div className="flex justify-between gap-4">
+                      <dt className="text-muted-foreground">Purpose</dt>
+                      <dd className="max-w-52 truncate text-right font-semibold text-foreground">
+                        {confirmed.service}
+                      </dd>
+                    </div>
+                    <div className="flex justify-between gap-4">
+                      <dt className="text-muted-foreground">Date</dt>
+                      <dd className="font-semibold text-foreground">
+                        {prettyDate(confirmed.date)}
+                      </dd>
+                    </div>
+                    <div className="flex justify-between gap-4">
+                      <dt className="text-muted-foreground">Time</dt>
+                      <dd className="font-semibold text-foreground">{confirmed.timeSlot}</dd>
+                    </div>
+                  </dl>
 
                   <div className="flex w-full flex-col gap-2.5 sm:flex-row">
                     <Button
-                      className="h-12 flex-1 rounded-full bg-gradient-to-r from-[#12588f] to-[#0f7f9c] text-[15px] font-semibold shadow-[0_10px_28px_rgb(18,88,143,0.35)] transition-opacity hover:opacity-95"
+                      className="h-12 flex-1 rounded-full bg-gradient-to-r from-[#12588f] to-[#0f7f9c] text-[15px] font-semibold shadow-[0_10px_28px_rgb(18,88,143,0.35)] transition-all hover:opacity-95 disabled:bg-muted disabled:bg-none disabled:text-muted-foreground disabled:shadow-none"
                       onClick={closeBooking}
                     >
                       Done
@@ -867,11 +898,13 @@ export function BookingModal() {
                       className="h-12 flex-1 rounded-full text-[15px] font-semibold"
                       onClick={() => {
                         setConfirmed(null);
-                        setService(null);
                         setPurposeText("");
-                        setDate("");
+                        const today = clinicTodayStr();
+                        setDate(today);
                         setSlot(null);
+                        setCustomTime("");
                         setAvailability(null);
+                        void loadAvailability(today);
                         setForm(emptyForm);
                         setErrors({});
                         setSubmitError(null);
