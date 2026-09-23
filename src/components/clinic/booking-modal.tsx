@@ -4,20 +4,32 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { format, parseISO } from "date-fns";
 import {
+  Activity,
+  Anchor,
   ArrowLeft,
   ArrowRight,
+  Baby,
   CalendarCheck,
   Check,
   CheckCircle2,
   Clock,
+  Crown,
   Loader2,
   Mail,
   NotebookPen,
   PenLine,
   Phone,
   ShieldCheck,
+  Smile,
+  Sparkles,
+  Star,
+  Stethoscope,
+  Syringe,
   TriangleAlert,
   User,
+  Wrench,
+  Zap,
+  type LucideIcon,
 } from "lucide-react";
 import {
   Dialog,
@@ -60,7 +72,6 @@ interface BookingForm {
   name: string;
   phone: string;
   email: string;
-  message: string;
 }
 
 interface ConfirmedAppointment {
@@ -75,8 +86,33 @@ interface ConfirmedAppointment {
 const STEP_LABELS = ["Purpose", "Date & Time", "Details"] as const;
 const CUSTOM_SLOT = "__custom__";
 const PURPOSE_MAX = 300;
+const OTHER = "__other__";
 
-const emptyForm: BookingForm = { name: "", phone: "", email: "", message: "" };
+const emptyForm: BookingForm = { name: "", phone: "", email: "" };
+
+/* --------------------- Treatment options (Step 1) --------------------- */
+
+interface TreatmentOption {
+  /** Canonical service name stored in the DB. */
+  value: string;
+  label: string;
+  icon: LucideIcon;
+}
+
+/** One card per clinic service (matches the Services section 1:1). */
+const TREATMENT_OPTIONS: readonly TreatmentOption[] = [
+  { value: "General Dental Checkup", label: "General Checkup", icon: Stethoscope },
+  { value: "Teeth Cleaning & Scaling", label: "Cleaning & Scaling", icon: Sparkles },
+  { value: "Tooth Filling", label: "Tooth Filling", icon: Wrench },
+  { value: "Root Canal Treatment", label: "Root Canal", icon: Activity },
+  { value: "Tooth Extraction", label: "Extraction", icon: Syringe },
+  { value: "Teeth Whitening", label: "Teeth Whitening", icon: Star },
+  { value: "Braces & Orthodontics", label: "Braces & Aligners", icon: Smile },
+  { value: "Dental Implants", label: "Dental Implants", icon: Anchor },
+  { value: "Crown & Bridge", label: "Crown & Bridge", icon: Crown },
+  { value: "Kids Dentistry", label: "Kids Dentistry", icon: Baby },
+  { value: "Emergency Dental Care", label: "Pain / Emergency", icon: Zap },
+];
 
 /** Slide direction-aware step transitions (dir: 1 = forward, -1 = back). */
 const stepVariants = {
@@ -127,7 +163,8 @@ export function BookingModal() {
   const [step, setStep] = useState<Step>(1);
   const [dir, setDir] = useState<1 | -1>(1);
 
-  const [purposeText, setPurposeText] = useState("");
+  const [selected, setSelected] = useState<string | null>(null);
+  const [reason, setReason] = useState("");
   const [date, setDate] = useState("");
   const [slot, setSlot] = useState<string | null>(null);
   const [customTime, setCustomTime] = useState("");
@@ -143,11 +180,24 @@ export function BookingModal() {
   const todayStr = useMemo(() => clinicTodayStr(), []);
   const maxDate = useMemo(() => maxDateStr(), []);
 
-  /** The purpose we send: the visitor's own words (required). */
+  const isOther = selected === OTHER;
+
+  /** Service sent to the API: the selected treatment, or the typed reason for "Something else". */
   const effectiveService = useMemo(() => {
-    const t = purposeText.trim();
-    return t.length >= 3 ? t.slice(0, PURPOSE_MAX) : null;
-  }, [purposeText]);
+    if (!selected) return null;
+    if (isOther) {
+      const t = reason.trim();
+      return t.length >= 3 ? t.slice(0, PURPOSE_MAX) : null;
+    }
+    return selected;
+  }, [selected, isOther, reason]);
+
+  /** Optional note for the doctor (the written reason/problem). */
+  const doctorNote = useMemo(() => {
+    if (!selected || isOther) return undefined;
+    const t = reason.trim();
+    return t ? t.slice(0, 500) : undefined;
+  }, [selected, isOther, reason]);
 
   /** Resolved time slot: a dropdown label or the custom time as "6:45 PM". */
   const effectiveSlot = useMemo(() => {
@@ -196,13 +246,12 @@ export function BookingModal() {
   /* ---------- Reset every time the dialog opens ---------- */
   useEffect(() => {
     if (!bookingOpen) return;
-    const pre =
-      preselectedService && preselectedService.trim().length >= 3
-        ? preselectedService.trim().slice(0, PURPOSE_MAX)
-        : "";
+    const pre = preselectedService?.trim() ?? "";
+    const match = TREATMENT_OPTIONS.find((o) => o.value === pre);
     setDir(1);
-    setPurposeText(pre);
-    setStep(pre ? 2 : 1);
+    setSelected(match ? match.value : null);
+    setReason("");
+    setStep(match ? 2 : 1);
     // Prefill today's date so patients see open slots immediately.
     const today = clinicTodayStr();
     setDate(today);
@@ -263,7 +312,7 @@ export function BookingModal() {
           service: effectiveService,
           date,
           timeSlot: effectiveSlot,
-          message: form.message.trim() || undefined,
+          message: doctorNote,
         }),
       });
 
@@ -424,42 +473,145 @@ export function BookingModal() {
                 >
                   <div className="flex items-start gap-3">
                     <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-xl bg-secondary text-primary">
-                      <NotebookPen className="size-4" aria-hidden />
+                      <Stethoscope className="size-4" aria-hidden />
                     </span>
                     <div>
                       <h3 className="font-display text-lg font-semibold leading-snug text-foreground">
-                        Purpose of visit / consultation
+                        What brings you in today?
                       </h3>
                       <p className="text-sm text-muted-foreground">
-                        Write your reason in your own words.
+                        Select a treatment to continue.
                       </p>
                     </div>
                   </div>
 
-                  <div className="flex flex-col gap-1.5">
-                    <Label htmlFor="booking-purpose" className="sr-only">
-                      Purpose of visit / consultation
-                    </Label>
-                    <Textarea
-                      id="booking-purpose"
-                      value={purposeText}
-                      onChange={(e) => setPurposeText(e.target.value)}
-                      maxLength={PURPOSE_MAX}
-                      rows={5}
-                      className="min-h-32 resize-none rounded-2xl border-border bg-background text-[15px] leading-relaxed"
-                    />
-                    <div className="flex items-center justify-between text-xs">
-                      {purposeText.trim().length > 0 && purposeText.trim().length < 3 ? (
-                        <p className="text-destructive">Please write a little more.</p>
-                      ) : (
-                        <span className="text-muted-foreground/70">
-                          The doctor will review this before your visit.
+                  {/* Treatment selection grid */}
+                  <div
+                    className="grid grid-cols-2 gap-2.5"
+                    role="group"
+                    aria-label="Treatment options"
+                  >
+                    {TREATMENT_OPTIONS.map((opt) => {
+                      const active = selected === opt.value;
+                      const Icon = opt.icon;
+                      return (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() => setSelected(opt.value)}
+                          aria-pressed={active}
+                          className={`group relative flex items-center gap-2.5 rounded-2xl border p-3 text-left transition-all duration-200 ${
+                            active
+                              ? "border-primary/70 bg-secondary shadow-[0_8px_20px_rgb(18,88,143,0.14)] ring-1 ring-primary/50"
+                              : "border-border bg-background hover:border-primary/35 hover:bg-secondary/40"
+                          }`}
+                        >
+                          <span
+                            className={`flex size-8 shrink-0 items-center justify-center rounded-xl transition-colors ${
+                              active
+                                ? "bg-gradient-to-br from-[#12588f] to-[#0f7f9c] text-white shadow-[0_4px_10px_rgb(18,88,143,0.35)]"
+                                : "bg-secondary text-primary group-hover:bg-accent"
+                            }`}
+                            aria-hidden
+                          >
+                            <Icon className="size-4" />
+                          </span>
+                          <span
+                            className={`text-[13px] font-semibold leading-tight ${
+                              active ? "text-primary" : "text-foreground/85"
+                            }`}
+                          >
+                            {opt.label}
+                          </span>
+                          {active && (
+                            <span
+                              className="absolute right-2 top-2 flex size-4.5 items-center justify-center rounded-full bg-primary text-primary-foreground"
+                              aria-hidden
+                            >
+                              <Check className="size-3" strokeWidth={3} />
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+
+                    {/* Something else — free text becomes the purpose */}
+                    <button
+                      type="button"
+                      onClick={() => setSelected(OTHER)}
+                      aria-pressed={isOther}
+                      className={`group relative flex items-center gap-2.5 rounded-2xl border p-3 text-left transition-all duration-200 ${
+                        isOther
+                          ? "border-primary/70 bg-secondary shadow-[0_8px_20px_rgb(18,88,143,0.14)] ring-1 ring-primary/50"
+                          : "border-dashed border-border bg-background hover:border-primary/35 hover:bg-secondary/40"
+                      }`}
+                    >
+                      <span
+                        className={`flex size-8 shrink-0 items-center justify-center rounded-xl transition-colors ${
+                          isOther
+                            ? "bg-gradient-to-br from-[#12588f] to-[#0f7f9c] text-white shadow-[0_4px_10px_rgb(18,88,143,0.35)]"
+                            : "bg-secondary text-primary group-hover:bg-accent"
+                        }`}
+                        aria-hidden
+                      >
+                        <PenLine className="size-4" />
+                      </span>
+                      <span
+                        className={`text-[13px] font-semibold leading-tight ${
+                          isOther ? "text-primary" : "text-foreground/85"
+                        }`}
+                      >
+                        Something else
+                      </span>
+                      {isOther && (
+                        <span
+                          className="absolute right-2 top-2 flex size-4.5 items-center justify-center rounded-full bg-primary text-primary-foreground"
+                          aria-hidden
+                        >
+                          <Check className="size-3" strokeWidth={3} />
                         </span>
                       )}
-                      <span className="tabular-nums text-muted-foreground/60">
-                        {purposeText.length}/{PURPOSE_MAX}
-                      </span>
+                    </button>
+                  </div>
+
+                  {/* Optional reason / problem — box stays empty, no placeholder */}
+                  <div className="flex flex-col gap-1.5">
+                    <div className="flex items-end justify-between gap-3">
+                      <Label htmlFor="booking-reason" className="text-[13px]">
+                        {isOther ? (
+                          "Describe your problem"
+                        ) : (
+                          <>
+                            Reason or problem{" "}
+                            <span className="font-normal text-muted-foreground">
+                              (optional)
+                            </span>
+                          </>
+                        )}
+                      </Label>
+                      {reason.length > 0 && (
+                        <span className="tabular-nums text-xs text-muted-foreground/60">
+                          {reason.length}/{PURPOSE_MAX}
+                        </span>
+                      )}
                     </div>
+                    <Textarea
+                      id="booking-reason"
+                      value={reason}
+                      onChange={(e) => setReason(e.target.value)}
+                      maxLength={PURPOSE_MAX}
+                      rows={3}
+                      className="min-h-20 resize-none rounded-2xl border-border bg-background text-[15px] leading-relaxed"
+                    />
+                    {isOther && reason.trim().length > 0 && reason.trim().length < 3 ? (
+                      <p className="text-xs text-destructive">Please write a little more.</p>
+                    ) : (
+                      <p className="text-xs text-muted-foreground">
+                        {isOther
+                          ? "Tell us briefly what you are experiencing — the doctor will review it."
+                          : "The doctor will review this before your visit."}
+                      </p>
+                    )}
                   </div>
 
                   <Button
@@ -686,6 +838,17 @@ export function BookingModal() {
                         {effectiveService}
                       </dd>
                     </div>
+                    {doctorNote && (
+                      <div className="flex items-start justify-between gap-4">
+                        <dt className="flex shrink-0 items-center gap-1.5 text-muted-foreground">
+                          <PenLine className="size-3.5" aria-hidden />
+                          Note
+                        </dt>
+                        <dd className="line-clamp-2 text-right text-foreground/80">
+                          {doctorNote}
+                        </dd>
+                      </div>
+                    )}
                     <div className="flex items-center justify-between gap-4">
                       <dt className="flex shrink-0 items-center gap-1.5 text-muted-foreground">
                         <CalendarCheck className="size-3.5" aria-hidden />
@@ -764,18 +927,6 @@ export function BookingModal() {
                         />
                       </div>
                       {errors.email && <p className="text-xs text-destructive">{errors.email}</p>}
-                    </div>
-
-                    <div className="flex flex-col gap-1.5">
-                      <Label htmlFor="booking-message">Message for the doctor (optional)</Label>
-                      <Textarea
-                        id="booking-message"
-                        value={form.message}
-                        onChange={(e) => setForm((f) => ({ ...f, message: e.target.value }))}
-                        placeholder="Anything the doctor should know? Pain, allergies, previous treatment…"
-                        rows={3}
-                        className="resize-none rounded-2xl border-border bg-background"
-                      />
                     </div>
                   </div>
 
@@ -898,7 +1049,8 @@ export function BookingModal() {
                       className="h-12 flex-1 rounded-full text-[15px] font-semibold"
                       onClick={() => {
                         setConfirmed(null);
-                        setPurposeText("");
+                        setSelected(null);
+                        setReason("");
                         const today = clinicTodayStr();
                         setDate(today);
                         setSlot(null);

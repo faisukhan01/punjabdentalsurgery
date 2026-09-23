@@ -81,10 +81,10 @@ export function Hero() {
         initial="hidden"
         animate="show"
         variants={{ hidden: {}, show: { transition: { staggerChildren: 0.13, delayChildren: 0.25 } } }}
-        className="relative z-10 mx-auto flex w-full max-w-6xl flex-1 flex-col justify-center px-5 pb-36 pt-24 sm:justify-end sm:px-6 sm:pb-44 sm:pt-32"
+        className="relative z-10 mx-auto flex w-full max-w-6xl flex-1 flex-col justify-center px-5 pb-36 pt-24 text-center sm:justify-end sm:px-6 sm:pb-44 sm:pt-32 sm:text-left"
       >
         {/* Live open-status glass chip (mobile only — desktop strip carries it) */}
-        <motion.p variants={item} className="mb-6 flex sm:mb-8 sm:hidden">
+        <motion.p variants={item} className="mb-6 flex justify-center sm:mb-8 sm:hidden">
           <span className="inline-flex items-center gap-2.5 rounded-full border border-white/25 bg-white/10 px-4 py-2.5 text-xs font-semibold tracking-wide text-white shadow-[0_8px_24px_rgb(0,0,0,0.25)] backdrop-blur-md">
             {statusDot}
             <span className="text-white/95">
@@ -103,25 +103,24 @@ export function Hero() {
 
         <motion.h1
           variants={item}
-          className="mt-4 max-w-3xl font-display text-[2.6rem] font-semibold leading-[1.06] text-balance text-white sm:mt-5 sm:text-6xl lg:text-[4.5rem]"
+          className="mx-auto mt-4 max-w-3xl font-display text-[2.7rem] font-semibold leading-[1.1] tracking-[-0.01em] text-balance text-white [text-shadow:0_2px_28px_rgba(0,0,0,0.5)] sm:mx-0 sm:mt-5 sm:text-6xl sm:leading-[1.06] lg:text-[4.4rem]"
         >
-          Gentle care. Honest dentistry.{" "}
-          <em
-            className="font-bold italic text-[#12588f] [text-shadow:0_2px_24px_rgba(255,255,255,0.55),0_0_10px_rgba(255,255,255,0.4)]"
-          >
-            Brighter smiles.
-          </em>
+          Where{" "}
+          <em className="bg-gradient-to-br from-[#fff3d6] via-[#f7d489] to-[#e5a44a] bg-clip-text font-bold italic text-transparent drop-shadow-[0_2px_16px_rgba(0,0,0,0.45)]">
+            beautiful smiles
+          </em>{" "}
+          begin.
         </motion.h1>
 
         <motion.p
           variants={item}
-          className="mt-5 max-w-md text-base leading-relaxed text-white/80 sm:max-w-lg sm:text-lg"
+          className="mx-auto mt-5 max-w-md text-[15px] leading-relaxed text-white/85 sm:mx-0 sm:max-w-lg sm:text-lg"
         >
-          Painless, careful treatment for your whole family — from routine
-          checkups to complete smile makeovers.
+          Kind, painless dentistry for your whole family — honest advice, careful
+          treatment and a calm, comfortable visit, every time.
         </motion.p>
 
-        <motion.div variants={item} className="mt-3 flex">
+        <motion.div variants={item} className="mt-3 flex justify-center sm:justify-start">
           <p dir="rtl" lang="ur" className="text-[15px] text-amber-50/70">
             {CLINIC.taglineUr}
           </p>
