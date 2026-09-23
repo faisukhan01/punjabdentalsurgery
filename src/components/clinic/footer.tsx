@@ -65,7 +65,7 @@ export function Footer() {
       />
       <div
         aria-hidden
-        className="absolute inset-x-0 top-0 h-24 bg-[radial-gradient(70%_100%_at_50%_0%,rgba(156,28,35,0.05),transparent)]"
+        className="absolute inset-x-0 top-0 h-24 bg-[radial-gradient(70%_100%_at_50%_0%,rgba(18,88,143,0.05),transparent)]"
       />
       <div
         aria-hidden
@@ -92,7 +92,7 @@ export function Footer() {
                   src="/logo.png"
                   alt=""
                   aria-hidden
-                  className="size-12 drop-shadow-[0_6px_16px_rgba(156,28,35,0.18)]"
+                  className="size-12 drop-shadow-[0_6px_16px_rgba(18,88,143,0.18)]"
                 />
                 <div>
                   <p className="font-display text-lg font-semibold leading-tight text-foreground">
@@ -213,7 +213,7 @@ export function Footer() {
             </div>
             <Button
               onClick={() => openBooking()}
-              className="h-11 w-full rounded-full bg-primary px-6 text-[15px] font-semibold shadow-[0_10px_30px_rgb(156,28,35,0.3)] hover:bg-primary/90 sm:w-auto sm:shrink-0"
+              className="h-11 w-full rounded-full bg-primary px-6 text-[15px] font-semibold shadow-[0_10px_30px_rgb(18,88,143,0.3)] hover:bg-primary/90 sm:w-auto sm:shrink-0"
             >
               <CalendarCheck className="size-5" aria-hidden />
               Book Appointment

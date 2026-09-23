@@ -271,7 +271,7 @@ export function AppointmentsTab({ pin, onUnauthorized, onDataChanged }: Appointm
                 className={cn(
                   "inline-flex min-h-[40px] shrink-0 items-center gap-1.5 rounded-full border px-4 text-sm font-medium transition-colors",
                   active
-                    ? "border-primary bg-primary text-primary-foreground shadow-[0_6px_18px_rgb(156,28,35,0.3)]"
+                    ? "border-primary bg-primary text-primary-foreground shadow-[0_6px_18px_rgb(18,88,143,0.3)]"
                     : "border-border bg-card text-foreground/80 hover:bg-secondary"
                 )}
               >
@@ -327,7 +327,7 @@ export function AppointmentsTab({ pin, onUnauthorized, onDataChanged }: Appointm
           </div>
 
           {/* Desktop: table */}
-          <div className="hidden overflow-hidden rounded-3xl border border-border/60 bg-card shadow-[0_8px_30px_rgb(156,28,35,0.06)] md:block">
+          <div className="hidden overflow-hidden rounded-3xl border border-border/60 bg-card shadow-[0_8px_30px_rgb(18,88,143,0.06)] md:block">
             <Table>
               <TableHeader>
                 <TableRow className="bg-secondary/50 hover:bg-secondary/50">
@@ -512,7 +512,7 @@ function RowActions({ appt, busy, onStatus, onDelete }: RowActionsProps) {
           disabled={appt.status === "CONFIRMED"}
           onClick={() => onStatus("CONFIRMED")}
         >
-          <CheckCircle2 className="size-4 text-red-600" aria-hidden />
+          <CheckCircle2 className="size-4 text-primary" aria-hidden />
           Confirm
         </DropdownMenuItem>
         <DropdownMenuItem
@@ -551,7 +551,7 @@ function AppointmentCard({ appt, busy, onStatus, onDelete }: AppointmentCardProp
   const longMessage = (appt.message?.length ?? 0) > 72;
 
   return (
-    <div className="rounded-3xl border border-border/60 bg-card p-4 shadow-[0_8px_30px_rgb(156,28,35,0.06)]">
+    <div className="rounded-3xl border border-border/60 bg-card p-4 shadow-[0_8px_30px_rgb(18,88,143,0.06)]">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="truncate font-semibold text-foreground">{appt.name}</p>

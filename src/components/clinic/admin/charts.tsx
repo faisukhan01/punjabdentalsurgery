@@ -13,7 +13,7 @@ import {
 } from "recharts";
 import { formatDayLabel } from "@/components/clinic/admin/types";
 
-const RED = "#b91c1c";
+const BRAND = "#12588f";
 const AMBER = "#d97706";
 
 function ChartTooltip({
@@ -76,7 +76,7 @@ export function BookingsChart({ data }: BookingsChartProps) {
           cursor={{ fill: "rgba(185, 28, 28, 0.08)" }}
           content={<ChartTooltip suffix=" booking(s)" />}
         />
-        <Bar dataKey="bookings" fill={RED} radius={[8, 8, 0, 0]} maxBarSize={44} />
+        <Bar dataKey="bookings" fill={BRAND} radius={[8, 8, 0, 0]} maxBarSize={44} />
       </BarChart>
     </ResponsiveContainer>
   );
@@ -94,8 +94,8 @@ export function VisitsChart({ data, height = 260 }: VisitsChartProps) {
       <AreaChart data={data} margin={{ top: 8, right: 8, left: -18, bottom: 0 }}>
         <defs>
           <linearGradient id="visitsFill" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={RED} stopOpacity={0.28} />
-            <stop offset="100%" stopColor={RED} stopOpacity={0.02} />
+            <stop offset="0%" stopColor={BRAND} stopOpacity={0.28} />
+            <stop offset="100%" stopColor={BRAND} stopOpacity={0.02} />
           </linearGradient>
           <linearGradient id="uniqueFill" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={AMBER} stopOpacity={0.24} />
@@ -120,7 +120,7 @@ export function VisitsChart({ data, height = 260 }: VisitsChartProps) {
         <Area
           type="monotone"
           dataKey="visits"
-          stroke={RED}
+          stroke={BRAND}
           strokeWidth={2}
           fill="url(#visitsFill)"
         />

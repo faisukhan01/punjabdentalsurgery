@@ -13,7 +13,6 @@ import {
 import { useClinicStore } from "@/components/clinic/store";
 import { scrollToSection } from "@/components/clinic/scroll";
 import { cn } from "@/lib/utils";
-import { CLINIC } from "@/lib/clinic";
 
 const NAV_LINKS = [
   { label: "Services", id: "services" },
@@ -57,44 +56,30 @@ export function Navbar() {
         "fixed inset-x-0 top-0 z-50 transition-all duration-300",
         scrolled
           ? "border-b border-border/60 bg-background/85 backdrop-blur-md"
-          : "border-b border-transparent bg-gradient-to-b from-red-950/50 to-transparent"
+          : "border-b border-transparent"
       )}
     >
       <nav
         className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4 sm:px-6"
         aria-label="Main navigation"
       >
-        {/* Logo */}
+        {/* Logo — the official logo carries the full clinic name, no extra text */}
         <button
           type="button"
           onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-          className="flex min-h-11 items-center gap-2.5 text-left"
-          aria-label="Back to top"
+          className="flex min-h-11 items-center text-left"
+          aria-label="Punjab Dental Surgery — back to top"
         >
           <img
             src="/logo.png"
-            alt=""
-            aria-hidden
-            className="size-9 shrink-0 drop-shadow-[0_4px_10px_rgba(0,0,0,0.25)]"
+            alt="Punjab Dental Surgery"
+            className={cn(
+              "h-11 w-auto shrink-0 transition-all",
+              scrolled
+                ? ""
+                : "rounded-xl bg-white/95 px-2 py-1 shadow-[0_6px_18px_rgba(0,0,0,0.3)]"
+            )}
           />
-          <span className="flex min-w-0 flex-col leading-tight">
-            <span
-              className={cn(
-                "truncate font-display text-[17px] font-semibold tracking-tight transition-colors",
-                scrolled ? "text-foreground" : "text-white"
-              )}
-            >
-              Punjab Dental Surgery
-            </span>
-            <span
-              className={cn(
-                "hidden truncate text-[11px] font-medium transition-colors sm:block",
-                scrolled ? "text-muted-foreground" : "text-white/60"
-              )}
-            >
-              {CLINIC.tagline}
-            </span>
-          </span>
         </button>
 
         {/* Desktop links */}
@@ -125,7 +110,7 @@ export function Navbar() {
               "hidden h-10 rounded-full px-5 transition-colors sm:inline-flex",
               scrolled
                 ? "bg-primary text-primary-foreground hover:bg-primary/90"
-                : "bg-white text-red-950 shadow-lg hover:bg-red-50"
+                : "bg-white text-primary shadow-lg hover:bg-sky-50"
             )}
             onClick={() => openBooking()}
           >

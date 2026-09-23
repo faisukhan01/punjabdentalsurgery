@@ -260,7 +260,7 @@ export function BookingModal() {
     const taken = availability?.taken.includes(s) ?? false;
     const selected = slot === s;
     if (selected)
-      return "border-primary bg-primary text-primary-foreground shadow-[0_6px_18px_rgb(156,28,35,0.35)]";
+      return "border-primary bg-primary text-primary-foreground shadow-[0_6px_18px_rgb(18,88,143,0.35)]";
     if (taken) return "border-border/60 bg-muted text-muted-foreground/60 line-through";
     return "border-border bg-card text-foreground hover:border-primary/50 hover:bg-secondary";
   };
@@ -331,7 +331,7 @@ export function BookingModal() {
                       active
                         ? "text-primary"
                         : done
-                          ? "text-red-600"
+                          ? "text-primary"
                           : "text-muted-foreground/70"
                     }`}
                     aria-current={active ? "step" : undefined}
@@ -383,7 +383,7 @@ export function BookingModal() {
                         aria-pressed={selected}
                         className={`flex min-h-[44px] items-center gap-2 rounded-2xl border px-3.5 py-2.5 text-left text-[13px] font-medium leading-snug transition-all ${
                           selected
-                            ? "border-primary bg-secondary text-primary shadow-[0_6px_18px_rgb(156,28,35,0.18)]"
+                            ? "border-primary bg-secondary text-primary shadow-[0_6px_18px_rgb(18,88,143,0.18)]"
                             : "border-border bg-card text-foreground/85 hover:border-primary/40 hover:bg-secondary/50"
                         }`}
                       >
@@ -612,7 +612,7 @@ export function BookingModal() {
                 )}
 
                 <Button
-                  className="mt-1 h-12 rounded-full text-[15px] font-semibold shadow-[0_10px_28px_rgb(156,28,35,0.35)]"
+                  className="mt-1 h-12 rounded-full text-[15px] font-semibold shadow-[0_10px_28px_rgb(18,88,143,0.35)]"
                   disabled={submitting}
                   onClick={() => void submit()}
                 >

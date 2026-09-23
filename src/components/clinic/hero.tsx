@@ -85,7 +85,7 @@ export function Hero() {
           className="mt-5 max-w-3xl font-display text-[2.75rem] font-medium leading-[1.04] text-balance text-white sm:text-6xl lg:text-[4.5rem]"
         >
           Gentle dentistry,{" "}
-          <em className="italic text-[#c2323b]">beautiful smiles.</em>
+          <em className="italic text-[#1a9aa2]">beautiful smiles.</em>
         </motion.h1>
 
         <motion.p
@@ -107,7 +107,7 @@ export function Hero() {
         >
           <Button
             size="lg"
-            className="h-12 w-full rounded-full bg-white px-8 text-base font-semibold text-red-950 shadow-[0_16px_40px_rgb(0,0,0,0.35)] hover:bg-red-50 sm:w-auto"
+            className="h-12 w-full rounded-full bg-white px-8 text-base font-semibold text-primary shadow-[0_16px_40px_rgb(0,0,0,0.35)] hover:bg-sky-50 sm:w-auto"
             onClick={() => openBooking()}
           >
             <CalendarCheck className="size-5" aria-hidden />

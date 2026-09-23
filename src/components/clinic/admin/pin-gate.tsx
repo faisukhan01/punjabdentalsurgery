@@ -59,7 +59,7 @@ export function PinGate({ onVerified }: PinGateProps) {
             : { opacity: 1, y: 0 }
         }
         transition={error ? { duration: 0.5 } : { duration: 0.5, ease: "easeOut" }}
-        className="w-full max-w-sm rounded-3xl border border-border/60 bg-card p-7 text-center shadow-[0_16px_48px_rgb(156,28,35,0.14)] sm:p-8"
+        className="w-full max-w-sm rounded-3xl border border-border/60 bg-card p-7 text-center shadow-[0_16px_48px_rgb(18,88,143,0.14)] sm:p-8"
       >
         <span className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
           <LockKeyhole className="size-7" aria-hidden />

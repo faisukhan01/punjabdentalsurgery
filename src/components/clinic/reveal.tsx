@@ -61,7 +61,7 @@ export function SectionHeading({
       <span
         className={cn(
           "text-xs font-bold uppercase tracking-[0.28em]",
-          dark ? "text-red-300" : "text-primary"
+          dark ? "text-sky-300" : "text-primary"
         )}
       >
         {kicker}
@@ -78,7 +78,7 @@ export function SectionHeading({
         <p
           className={cn(
             "max-w-2xl text-sm leading-relaxed sm:text-base",
-            dark ? "text-red-100/80" : "text-muted-foreground"
+            dark ? "text-sky-100/80" : "text-muted-foreground"
           )}
         >
           {subtitle}

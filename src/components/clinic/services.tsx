@@ -65,7 +65,7 @@ export function Services() {
               <button
                 type="button"
                 onClick={() => openBooking(item.service)}
-                className="group flex h-full w-full flex-col items-start rounded-2xl border border-border/70 bg-card p-6 text-left transition-all duration-300 hover:border-primary/40 hover:shadow-[0_10px_30px_rgb(156,28,35,0.08)]"
+                className="group flex h-full w-full flex-col items-start rounded-2xl border border-border/70 bg-card p-6 text-left transition-all duration-300 hover:border-primary/40 hover:shadow-[0_10px_30px_rgb(18,88,143,0.08)]"
               >
                 <span className="flex size-11 items-center justify-center rounded-xl bg-secondary text-primary">
                   <item.icon className="size-5" aria-hidden />
