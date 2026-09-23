@@ -60,10 +60,14 @@ export function Navbar() {
       )}
     >
       <nav
-        className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4 sm:px-6"
+        className={cn(
+          "mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 transition-all duration-300 sm:px-6",
+          scrolled ? "h-16" : "h-[72px] sm:h-[92px]"
+        )}
         aria-label="Main navigation"
       >
-        {/* Logo — the official logo carries the full clinic name, no extra text */}
+        {/* Logo — transparent, big and glowing over the video; carries the full
+            clinic name so no extra text is needed */}
         <button
           type="button"
           onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
@@ -74,10 +78,10 @@ export function Navbar() {
             src="/logo.png"
             alt="Punjab Dental Surgery"
             className={cn(
-              "h-11 w-auto shrink-0 transition-all",
+              "w-auto shrink-0 transition-all duration-300",
               scrolled
-                ? ""
-                : "rounded-xl bg-white/95 px-2 py-1 shadow-[0_6px_18px_rgba(0,0,0,0.3)]"
+                ? "h-9 sm:h-11"
+                : "h-14 sm:h-20 [filter:brightness(1.06)_drop-shadow(0_2px_10px_rgba(0,0,0,0.45))_drop-shadow(0_0_22px_rgba(255,255,255,0.55))]"
             )}
           />
         </button>

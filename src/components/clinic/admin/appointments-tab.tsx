@@ -89,6 +89,8 @@ export function AppointmentsTab({ pin, onUnauthorized, onDataChanged }: Appointm
   const [loading, setLoading] = useState(true);
   const [actionId, setActionId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<AdminAppointment | null>(null);
+  const [confirmClear, setConfirmClear] = useState(false);
+  const [clearing, setClearing] = useState(false);
 
   /* Debounce search input → q (400ms). Also resets paging + loading. */
   useEffect(() => {
@@ -188,6 +190,34 @@ export function AppointmentsTab({ pin, onUnauthorized, onDataChanged }: Appointm
     }
   };
 
+  /* Wipe every appointment + visitor record (demo/seed data cleanup). */
+  const clearAllData = async () => {
+    setClearing(true);
+    const res = await adminFetch<{ ok: boolean; deleted: { appointments: number; visits: number } }>(
+      "/api/admin/reset",
+      pin,
+      onUnauthorized,
+      { method: "POST" }
+    );
+    setClearing(false);
+    if (res?.ok) {
+      toast({
+        title: "All data cleared",
+        description: `${res.deleted.appointments} appointment(s) and ${res.deleted.visits} visitor record(s) removed.`,
+      });
+      setConfirmClear(false);
+      setLoading(true);
+      void fetchList();
+      onDataChanged();
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Clear failed",
+        description: "Could not clear the data. Please try again.",
+      });
+    }
+  };
+
   const totalPages = data ? Math.max(1, Math.ceil(data.total / data.pageSize)) : 1;
   const counts = data?.counts;
 
@@ -250,6 +280,18 @@ export function AppointmentsTab({ pin, onUnauthorized, onDataChanged }: Appointm
             >
               <RefreshCw className={cn("size-4", loading && "animate-spin")} aria-hidden />
             </Button>
+            {Boolean(data && data.total > 0) && (
+              <Button
+                variant="outline"
+                className="h-11 shrink-0 rounded-full border-destructive/40 px-4 text-destructive hover:bg-red-50 hover:text-destructive"
+                onClick={() => setConfirmClear(true)}
+                disabled={clearing}
+                aria-label="Clear all appointments and visitor records"
+              >
+                <Trash2 className="size-4" aria-hidden />
+                <span className="hidden sm:inline">Clear all</span>
+              </Button>
+            )}
           </div>
         </div>
 
@@ -425,6 +467,38 @@ export function AppointmentsTab({ pin, onUnauthorized, onDataChanged }: Appointm
           )}
         </>
       )}
+
+      {/* Clear-all confirmation */}
+      <AlertDialog
+        open={confirmClear}
+        onOpenChange={(open) => !open && !clearing && setConfirmClear(false)}
+      >
+        <AlertDialogContent className="rounded-3xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Clear ALL data?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Every appointment and visitor record will be permanently deleted — this is meant for
+              removing demo/test data and cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2 sm:gap-0">
+            <AlertDialogCancel className="mt-0 rounded-full" disabled={clearing}>
+              Keep my data
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className="rounded-full bg-destructive text-white hover:bg-destructive/90"
+              disabled={clearing}
+              onClick={(e) => {
+                e.preventDefault();
+                void clearAllData();
+              }}
+            >
+              <Trash2 className="size-4" aria-hidden />
+              {clearing ? "Clearing…" : "Clear everything"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Delete confirmation */}
       <AlertDialog

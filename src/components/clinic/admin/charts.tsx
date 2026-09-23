@@ -73,7 +73,7 @@ export function BookingsChart({ data }: BookingsChartProps) {
           tickLine={false}
         />
         <Tooltip
-          cursor={{ fill: "rgba(185, 28, 28, 0.08)" }}
+          cursor={{ fill: "rgba(18, 88, 143, 0.08)" }}
           content={<ChartTooltip suffix=" booking(s)" />}
         />
         <Bar dataKey="bookings" fill={BRAND} radius={[8, 8, 0, 0]} maxBarSize={44} />

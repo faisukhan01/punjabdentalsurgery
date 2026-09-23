@@ -3,7 +3,6 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { isAdminRequest, unauthorized } from "@/lib/admin";
 import {
-  SERVICE_NAMES,
   TIME_SLOTS,
   clinicTodayStr,
   isClosedDay,
@@ -21,7 +20,9 @@ const createSchema = z.object({
     .trim()
     .regex(/^[+]?[0-9\s-]{10,16}$/, "Please enter a valid phone number"),
   email: z.union([z.email(), z.literal("")]).optional(),
-  service: z.enum(SERVICE_NAMES),
+  // Purpose of visit — free text so patients can describe their own reason
+  // (a quick-pick chip on the frontend also lands here).
+  service: z.string().trim().min(2).max(120),
   date: z
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format")

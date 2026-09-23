@@ -11,9 +11,18 @@ import {
   CheckCircle2,
   Clock,
   Loader2,
+  Mail,
   MoonStar,
+  NotebookPen,
+  Phone,
+  ShieldCheck,
+  Sparkles,
+  Smile,
+  Stethoscope,
   SunMedium,
   TriangleAlert,
+  User,
+  Zap,
 } from "lucide-react";
 import {
   Dialog,
@@ -30,7 +39,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { useClinicStore } from "@/components/clinic/store";
 import {
-  SERVICE_NAMES,
   TIME_SLOTS,
   clinicTodayStr,
 } from "@/lib/clinic";
@@ -61,10 +69,19 @@ interface ConfirmedAppointment {
   status: string;
 }
 
-const STEP_LABELS = ["Service", "Date & Time", "Details", "Done"] as const;
+const STEP_LABELS = ["Purpose", "Date & Time", "Details", "Done"] as const;
 
 const MORNING_SLOTS = TIME_SLOTS.slice(0, 8) as readonly string[];
 const EVENING_SLOTS = TIME_SLOTS.slice(8) as readonly string[];
+
+/* Quick one-tap purposes — a short, friendly starting point. Patients can
+   always describe their own reason instead. */
+const QUICK_PURPOSES = [
+  { value: "General Consultation", icon: Stethoscope, hint: "Exam & advice" },
+  { value: "Tooth Pain / Emergency", icon: Zap, hint: "Fast relief" },
+  { value: "Cleaning & Scaling", icon: Sparkles, hint: "Polish & shine" },
+  { value: "Braces & Cosmetic", icon: Smile, hint: "Straighten & glow" },
+] as const;
 
 const emptyForm: BookingForm = { name: "", phone: "", email: "", message: "" };
 
@@ -106,6 +123,7 @@ export function BookingModal() {
   const [dir, setDir] = useState<1 | -1>(1);
 
   const [service, setService] = useState<string | null>(null);
+  const [purposeText, setPurposeText] = useState("");
   const [date, setDate] = useState("");
   const [slot, setSlot] = useState<string | null>(null);
   const [availability, setAvailability] = useState<Availability | null>(null);
@@ -119,6 +137,13 @@ export function BookingModal() {
 
   const todayStr = useMemo(() => clinicTodayStr(), []);
   const maxDate = useMemo(() => maxDateStr(), []);
+
+  /** The purpose we ultimately send: a quick chip or the visitor's own words. */
+  const effectiveService = useMemo(() => {
+    if (service) return service;
+    const t = purposeText.trim();
+    return t.length >= 3 ? t.slice(0, 120) : null;
+  }, [service, purposeText]);
 
   /* ---------- Availability fetching ---------- */
   const loadAvailability = useCallback(async (dateStr: string) => {
@@ -146,12 +171,12 @@ export function BookingModal() {
   useEffect(() => {
     if (!bookingOpen) return;
     const pre =
-      preselectedService &&
-      (SERVICE_NAMES as readonly string[]).includes(preselectedService)
-        ? preselectedService
+      preselectedService && preselectedService.trim().length >= 3
+        ? preselectedService.trim().slice(0, 120)
         : null;
     setDir(1);
     setService(pre);
+    setPurposeText("");
     setStep(pre ? 2 : 1);
     // Prefill today's date so patients see open slots immediately.
     const today = clinicTodayStr();
@@ -197,7 +222,7 @@ export function BookingModal() {
   };
 
   const submit = async () => {
-    if (!service || !date || !slot || !validateForm()) return;
+    if (!effectiveService || !date || !slot || !validateForm()) return;
     setSubmitting(true);
     setSubmitError(null);
     try {
@@ -208,7 +233,7 @@ export function BookingModal() {
           name: form.name.trim(),
           phone: form.phone.trim(),
           email: form.email.trim() || undefined,
-          service,
+          service: effectiveService,
           date,
           timeSlot: slot,
           message: form.message.trim() || undefined,
@@ -260,7 +285,7 @@ export function BookingModal() {
     const taken = availability?.taken.includes(s) ?? false;
     const selected = slot === s;
     if (selected)
-      return "border-primary bg-primary text-primary-foreground shadow-[0_6px_18px_rgb(18,88,143,0.35)]";
+      return "border-transparent bg-gradient-to-br from-[#12588f] to-[#0f7f9c] text-white shadow-[0_8px_20px_rgb(18,88,143,0.35)]";
     if (taken) return "border-border/60 bg-muted text-muted-foreground/60 line-through";
     return "border-border bg-card text-foreground hover:border-primary/50 hover:bg-secondary";
   };
@@ -297,422 +322,570 @@ export function BookingModal() {
 
   return (
     <Dialog open={bookingOpen} onOpenChange={(open) => !open && closeBooking()}>
-      <DialogContent className="scrollbar-thin max-h-[92svh] w-[95vw] gap-0 overflow-y-auto rounded-3xl p-0 sm:max-w-lg">
-        <DialogHeader className="gap-1.5 border-b border-border/60 p-5 text-left sm:p-6">
-          <DialogTitle className="flex items-center gap-2.5 font-display text-xl">
-            <span className="flex size-9 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-              <CalendarCheck className="size-4.5" aria-hidden />
-            </span>
-            Book Your Appointment
-          </DialogTitle>
-          <DialogDescription>
-            Under a minute — pick a service, choose a time, done.
-          </DialogDescription>
+      <DialogContent
+        showCloseButton={false}
+        className={`
+          gap-0 overflow-hidden p-0
+          fixed inset-x-0 bottom-0 top-auto left-0 right-0
+          translate-x-0 translate-y-0
+          max-h-[94svh] w-full sm:max-w-lg
+          rounded-t-[1.75rem] sm:rounded-[1.75rem]
+          sm:inset-x-auto sm:bottom-auto sm:left-1/2 sm:top-1/2 sm:right-auto
+          sm:-translate-x-1/2 sm:-translate-y-1/2
+          sm:max-h-[92svh]
+          border-border/50 shadow-[0_24px_80px_rgb(4,24,43,0.45)]
+          data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95
+        `}
+      >
+        <div className="scrollbar-thin max-h-[94svh] overflow-y-auto sm:max-h-[92svh]">
+          {/* ------------------------- Gradient header band ------------------------- */}
+          <div className="relative overflow-hidden bg-gradient-to-br from-[#0c3054] via-[#12588f] to-[#0f7f9c] px-5 pb-5 pt-6 text-white sm:px-7">
+            {/* Decorative glows */}
+            <div
+              className="pointer-events-none absolute -right-14 -top-16 size-44 rounded-full bg-white/10 blur-2xl"
+              aria-hidden
+            />
+            <div
+              className="pointer-events-none absolute -left-10 bottom-[-52px] size-36 rounded-full bg-teal-300/20 blur-2xl"
+              aria-hidden
+            />
 
-          {/* Progress */}
-          <div className="mt-3">
-            <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
-              <motion.div
-                className="h-full rounded-full bg-primary"
-                initial={false}
-                animate={{ width: `${(step / 4) * 100}%` }}
-                transition={{ duration: 0.4, ease: "easeOut" }}
-              />
-            </div>
-            <ol className="mt-2.5 flex items-center justify-between" aria-label="Booking steps">
-              {STEP_LABELS.map((label, i) => {
-                const n = (i + 1) as Step;
-                const active = n === step;
-                const done = n < step;
-                return (
-                  <li
-                    key={label}
-                    className={`flex items-center gap-1.5 text-[11px] font-semibold sm:text-xs ${
-                      active
-                        ? "text-primary"
-                        : done
-                          ? "text-primary"
-                          : "text-muted-foreground/70"
-                    }`}
-                    aria-current={active ? "step" : undefined}
-                  >
-                    {done ? (
-                      <Check className="size-3.5" aria-hidden />
-                    ) : (
-                      <span
-                        className={`size-1.5 rounded-full ${
-                          active ? "bg-primary" : "bg-muted-foreground/40"
-                        }`}
-                        aria-hidden
-                      />
-                    )}
-                    {label}
-                  </li>
-                );
-              })}
-            </ol>
-          </div>
-        </DialogHeader>
+            {/* Custom close */}
+            <button
+              type="button"
+              onClick={closeBooking}
+              aria-label="Close booking dialog"
+              className="absolute right-4 top-4 flex size-9 items-center justify-center rounded-full bg-white/10 text-white/90 transition-colors hover:bg-white/25 hover:text-white"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="size-4" aria-hidden>
+                <path d="M18 6 6 18M6 6l12 12" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
 
-        <div className="p-5 sm:p-6">
-          <AnimatePresence mode="wait" custom={dir} initial={false}>
-            {/* ------------------------------ STEP 1: SERVICE ------------------------------ */}
-            {step === 1 && (
-              <motion.div
-                key="step-1"
-                variants={stepVariants}
-                custom={dir}
-                initial="initial"
-                animate="animate"
-                exit="exit"
-                transition={{ duration: 0.3, ease: "easeOut" }}
-                className="flex flex-col gap-4"
-              >
-                <div>
-                  <h3 className="font-display text-lg font-semibold">What do you need help with?</h3>
-                  <p className="text-sm text-muted-foreground">Pick a service to continue.</p>
-                </div>
-                <div className="grid grid-cols-2 gap-2.5">
-                  {SERVICE_NAMES.map((name) => {
-                    const selected = service === name;
-                    return (
-                      <button
-                        key={name}
-                        type="button"
-                        onClick={() => setService(name)}
-                        aria-pressed={selected}
-                        className={`flex min-h-[44px] items-center gap-2 rounded-2xl border px-3.5 py-2.5 text-left text-[13px] font-medium leading-snug transition-all ${
-                          selected
-                            ? "border-primary bg-secondary text-primary shadow-[0_6px_18px_rgb(18,88,143,0.18)]"
-                            : "border-border bg-card text-foreground/85 hover:border-primary/40 hover:bg-secondary/50"
-                        }`}
-                      >
+            <DialogHeader className="gap-1.5 text-left">
+              <DialogTitle className="flex items-center gap-3 pr-8 font-display text-xl text-white sm:text-[1.35rem]">
+                <span className="flex size-11 items-center justify-center rounded-2xl bg-white/15 shadow-inner ring-1 ring-white/25">
+                  <CalendarCheck className="size-5" aria-hidden />
+                </span>
+                <span className="flex flex-col">
+                  Book Your Appointment
+                  <span className="text-[11px] font-medium uppercase tracking-[0.22em] text-sky-200/90">
+                    Punjab Dental Surgery
+                  </span>
+                </span>
+              </DialogTitle>
+              <DialogDescription className="text-[13px] leading-relaxed text-sky-100/80">
+                Under a minute — tell us why you&apos;re coming, pick a time, done.
+              </DialogDescription>
+            </DialogHeader>
+
+            {/* Progress */}
+            <div className="mt-4">
+              <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/20">
+                <motion.div
+                  className="h-full rounded-full bg-white shadow-[0_0_12px_rgba(255,255,255,0.8)]"
+                  initial={false}
+                  animate={{ width: `${(step / 4) * 100}%` }}
+                  transition={{ duration: 0.4, ease: "easeOut" }}
+                />
+              </div>
+              <ol className="mt-2.5 flex items-center justify-between" aria-label="Booking steps">
+                {STEP_LABELS.map((label, i) => {
+                  const n = (i + 1) as Step;
+                  const active = n === step;
+                  const done = n < step;
+                  return (
+                    <li
+                      key={label}
+                      className={`flex items-center gap-1.5 text-[11px] font-semibold sm:text-xs ${
+                        active || done ? "text-white" : "text-sky-200/60"
+                      }`}
+                      aria-current={active ? "step" : undefined}
+                    >
+                      {done ? (
+                        <span className="flex size-4 items-center justify-center rounded-full bg-white text-[#12588f]">
+                          <Check className="size-2.5" strokeWidth={3.5} aria-hidden />
+                        </span>
+                      ) : (
                         <span
-                          className={`flex size-5 shrink-0 items-center justify-center rounded-full border ${
-                            selected ? "border-primary bg-primary text-primary-foreground" : "border-border"
+                          className={`size-2 rounded-full ${
+                            active ? "bg-white shadow-[0_0_8px_rgba(255,255,255,0.9)]" : "bg-white/35"
                           }`}
                           aria-hidden
-                        >
-                          {selected && <Check className="size-3" />}
-                        </span>
-                        {name}
-                      </button>
-                    );
-                  })}
-                </div>
-                <Button
-                  className="mt-1 h-12 rounded-full text-[15px] font-semibold"
-                  disabled={!service}
-                  onClick={() => goTo(2)}
-                >
-                  Continue
-                  <ArrowRight className="size-4" aria-hidden />
-                </Button>
-              </motion.div>
-            )}
+                        />
+                      )}
+                      {label}
+                    </li>
+                  );
+                })}
+              </ol>
+            </div>
+          </div>
 
-            {/* --------------------------- STEP 2: DATE & TIME --------------------------- */}
-            {step === 2 && (
-              <motion.div
-                key="step-2"
-                variants={stepVariants}
-                custom={dir}
-                initial="initial"
-                animate="animate"
-                exit="exit"
-                transition={{ duration: 0.3, ease: "easeOut" }}
-                className="flex flex-col gap-4"
-              >
-                <div className="flex items-center justify-between gap-3">
+          {/* ------------------------------ Steps body ------------------------------ */}
+          <div className="bg-gradient-to-b from-secondary/40 to-background p-5 sm:p-7">
+            <AnimatePresence mode="wait" custom={dir} initial={false}>
+              {/* --------------------------- STEP 1: PURPOSE --------------------------- */}
+              {step === 1 && (
+                <motion.div
+                  key="step-1"
+                  variants={stepVariants}
+                  custom={dir}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  transition={{ duration: 0.3, ease: "easeOut" }}
+                  className="flex flex-col gap-4"
+                >
                   <div>
-                    <h3 className="font-display text-lg font-semibold">Choose date & time</h3>
+                    <h3 className="font-display text-lg font-semibold text-foreground">
+                      What brings you in?
+                    </h3>
                     <p className="text-sm text-muted-foreground">
-                      {service && <span className="font-medium text-primary">{service}</span>}
+                      Pick a common reason — or write your own below.
                     </p>
                   </div>
-                  <Button variant="ghost" size="sm" className="h-9 shrink-0" onClick={back}>
-                    <ArrowLeft className="size-4" aria-hidden />
-                    Back
-                  </Button>
-                </div>
 
-                <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="booking-date">Appointment date</Label>
-                  <Input
-                    id="booking-date"
-                    type="date"
-                    value={date}
-                    min={todayStr}
-                    max={maxDate}
-                    onChange={(e) => handleDateChange(e.target.value)}
-                    className="h-11 rounded-xl"
-                  />
-                </div>
-
-                {date && availability?.closed && (
-                  <div className="flex items-start gap-2.5 rounded-2xl border border-amber-300/70 bg-amber-50 p-3.5 text-sm text-amber-900">
-                    <TriangleAlert className="mt-0.5 size-4 shrink-0 text-amber-500" aria-hidden />
-                    The clinic is closed on that day — please pick another day.
+                  <div className="grid grid-cols-2 gap-2.5">
+                    {QUICK_PURPOSES.map((p) => {
+                      const selected = service === p.value;
+                      return (
+                        <button
+                          key={p.value}
+                          type="button"
+                          onClick={() => {
+                            setService(selected ? null : p.value);
+                            setPurposeText("");
+                          }}
+                          aria-pressed={selected}
+                          className={`flex min-h-[76px] flex-col justify-center gap-1 rounded-2xl border p-3 text-left transition-all ${
+                            selected
+                              ? "border-primary bg-secondary shadow-[0_8px_24px_rgb(18,88,143,0.2)] ring-2 ring-primary/25"
+                              : "border-border bg-card hover:border-primary/40 hover:bg-secondary/50"
+                          }`}
+                        >
+                          <span className="flex items-center gap-2">
+                            <span
+                              className={`flex size-8 shrink-0 items-center justify-center rounded-xl transition-colors ${
+                                selected
+                                  ? "bg-primary text-primary-foreground"
+                                  : "bg-secondary text-primary"
+                              }`}
+                            >
+                              <p.icon className="size-4" aria-hidden />
+                            </span>
+                            <span className="text-[13px] font-semibold leading-tight text-foreground">
+                              {p.value}
+                            </span>
+                          </span>
+                          <span className="pl-10 text-[11px] text-muted-foreground">{p.hint}</span>
+                        </button>
+                      );
+                    })}
                   </div>
-                )}
-                {date && availability?.past && (
-                  <div className="flex items-start gap-2.5 rounded-2xl border border-amber-300/70 bg-amber-50 p-3.5 text-sm text-amber-900">
-                    <TriangleAlert className="mt-0.5 size-4 shrink-0 text-amber-500" aria-hidden />
-                    That date has already passed — please pick today or a future date.
-                  </div>
-                )}
 
-                {date && availLoading && (
-                  <div className="flex flex-col gap-3">
-                    <Skeleton className="h-3.5 w-20" />
-                    <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
-                      {Array.from({ length: 8 }).map((_, i) => (
-                        <Skeleton key={i} className="h-[44px] rounded-xl" />
-                      ))}
-                    </div>
+                  {/* Divider — "or" */}
+                  <div className="flex items-center gap-3" aria-hidden>
+                    <span className="h-px flex-1 bg-border" />
+                    <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                      or write your own
+                    </span>
+                    <span className="h-px flex-1 bg-border" />
                   </div>
-                )}
 
-                {date && availability && !availability.closed && !availability.past && !availLoading && (
-                  <div className="flex flex-col gap-4">
-                    {availability.taken.length >= TIME_SLOTS.length ? (
-                      <div className="flex items-start gap-2.5 rounded-2xl border border-amber-300/70 bg-amber-50 p-3.5 text-sm text-amber-900">
-                        <TriangleAlert className="mt-0.5 size-4 shrink-0 text-amber-500" aria-hidden />
-                        Every slot for {prettyDate(date)} is booked. Please try another day.
-                      </div>
-                    ) : (
-                      <>
-                        {renderSlotGroup("Morning", <SunMedium className="size-3.5" />, MORNING_SLOTS)}
-                        {renderSlotGroup("Evening", <MoonStar className="size-3.5" />, EVENING_SLOTS)}
-                      </>
+                  <div className="flex flex-col gap-1.5">
+                    <Label htmlFor="booking-purpose" className="flex items-center gap-1.5">
+                      <NotebookPen className="size-3.5 text-primary" aria-hidden />
+                      Purpose of visit / consultation
+                    </Label>
+                    <Textarea
+                      id="booking-purpose"
+                      value={purposeText}
+                      onChange={(e) => {
+                        setPurposeText(e.target.value);
+                        setService(null);
+                      }}
+                      placeholder="Tell us in your own words — e.g. root canal follow-up, teeth whitening, kids' checkup…"
+                      rows={3}
+                      className="resize-none rounded-2xl border-border bg-card"
+                    />
+                    {purposeText.trim().length > 0 && purposeText.trim().length < 3 && (
+                      <p className="text-xs text-destructive">
+                        Please write at least a few letters.
+                      </p>
                     )}
                   </div>
-                )}
 
-                {date && !availability && !availLoading && (
-                  <p className="text-sm text-muted-foreground">
-                    Select a date to see available times.
-                  </p>
-                )}
-
-                <Button
-                  className="mt-1 h-12 rounded-full text-[15px] font-semibold"
-                  disabled={!date || !slot || Boolean(availability?.closed)}
-                  onClick={() => goTo(3)}
-                >
-                  Continue
-                  <ArrowRight className="size-4" aria-hidden />
-                </Button>
-              </motion.div>
-            )}
-
-            {/* ----------------------------- STEP 3: DETAILS ----------------------------- */}
-            {step === 3 && (
-              <motion.div
-                key="step-3"
-                variants={stepVariants}
-                custom={dir}
-                initial="initial"
-                animate="animate"
-                exit="exit"
-                transition={{ duration: 0.3, ease: "easeOut" }}
-                className="flex flex-col gap-4"
-              >
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <h3 className="font-display text-lg font-semibold">Your details</h3>
-                    <p className="text-sm text-muted-foreground">We&apos;ll call to confirm.</p>
-                  </div>
-                  <Button variant="ghost" size="sm" className="h-9 shrink-0" onClick={back}>
-                    <ArrowLeft className="size-4" aria-hidden />
-                    Back
-                  </Button>
-                </div>
-
-                {/* Summary line */}
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-2xl bg-secondary/70 px-4 py-3 text-[13px] text-secondary-foreground">
-                  <span className="font-semibold">{service}</span>
-                  <span className="inline-flex items-center gap-1">
-                    <CalendarCheck className="size-3.5" aria-hidden />
-                    {prettyDate(date)}
-                  </span>
-                  <span className="inline-flex items-center gap-1">
-                    <Clock className="size-3.5" aria-hidden />
-                    {slot}
-                  </span>
-                </div>
-
-                <div className="flex flex-col gap-3.5">
-                  <div className="flex flex-col gap-1.5">
-                    <Label htmlFor="booking-name">Full name *</Label>
-                    <Input
-                      id="booking-name"
-                      value={form.name}
-                      onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-                      placeholder="e.g. Ali Raza"
-                      autoComplete="name"
-                      aria-invalid={Boolean(errors.name)}
-                      className="h-11 rounded-xl"
-                    />
-                    {errors.name && <p className="text-xs text-destructive">{errors.name}</p>}
-                  </div>
-
-                  <div className="flex flex-col gap-1.5">
-                    <Label htmlFor="booking-phone">Phone number *</Label>
-                    <Input
-                      id="booking-phone"
-                      type="tel"
-                      inputMode="tel"
-                      value={form.phone}
-                      onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
-                      placeholder="03XX-XXXXXXX"
-                      autoComplete="tel"
-                      aria-invalid={Boolean(errors.phone)}
-                      className="h-11 rounded-xl"
-                    />
-                    {errors.phone && <p className="text-xs text-destructive">{errors.phone}</p>}
-                  </div>
-
-                  <div className="flex flex-col gap-1.5">
-                    <Label htmlFor="booking-email">Email (optional)</Label>
-                    <Input
-                      id="booking-email"
-                      type="email"
-                      value={form.email}
-                      onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
-                      placeholder="you@example.com"
-                      autoComplete="email"
-                      aria-invalid={Boolean(errors.email)}
-                      className="h-11 rounded-xl"
-                    />
-                    {errors.email && <p className="text-xs text-destructive">{errors.email}</p>}
-                  </div>
-
-                  <div className="flex flex-col gap-1.5">
-                    <Label htmlFor="booking-message">Message (optional)</Label>
-                    <Textarea
-                      id="booking-message"
-                      value={form.message}
-                      onChange={(e) => setForm((f) => ({ ...f, message: e.target.value }))}
-                      placeholder="Anything the doctor should know? Pain, allergies, previous treatment…"
-                      rows={3}
-                      className="resize-none rounded-xl"
-                    />
-                  </div>
-                </div>
-
-                {submitError && (
-                  <div
-                    role="alert"
-                    className="flex items-start gap-2.5 rounded-2xl border border-destructive/40 bg-red-50 p-3.5 text-sm text-destructive"
+                  <Button
+                    className="mt-1 h-12 rounded-full bg-gradient-to-r from-[#12588f] to-[#0f7f9c] text-[15px] font-semibold shadow-[0_10px_28px_rgb(18,88,143,0.35)] transition-opacity hover:opacity-95"
+                    disabled={!effectiveService}
+                    onClick={() => goTo(2)}
                   >
-                    <TriangleAlert className="mt-0.5 size-4 shrink-0" aria-hidden />
-                    {submitError}
-                  </div>
-                )}
-
-                <Button
-                  className="mt-1 h-12 rounded-full text-[15px] font-semibold shadow-[0_10px_28px_rgb(18,88,143,0.35)]"
-                  disabled={submitting}
-                  onClick={() => void submit()}
-                >
-                  {submitting ? (
-                    <>
-                      <Loader2 className="size-4 animate-spin" aria-hidden />
-                      Booking…
-                    </>
-                  ) : (
-                    <>
-                      <CalendarCheck className="size-4" aria-hidden />
-                      Confirm Booking
-                    </>
-                  )}
-                </Button>
-              </motion.div>
-            )}
-
-            {/* ------------------------------ STEP 4: DONE ------------------------------ */}
-            {step === 4 && confirmed && (
-              <motion.div
-                key="step-4"
-                variants={stepVariants}
-                custom={dir}
-                initial="initial"
-                animate="animate"
-                exit="exit"
-                transition={{ duration: 0.3, ease: "easeOut" }}
-                className="flex flex-col items-center gap-4 text-center"
-              >
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ type: "spring", stiffness: 260, damping: 16, delay: 0.05 }}
-                  className="flex size-20 items-center justify-center rounded-full bg-green-100"
-                >
-                  <CheckCircle2 className="size-12 text-green-600" aria-hidden />
+                    Continue
+                    <ArrowRight className="size-4" aria-hidden />
+                  </Button>
                 </motion.div>
+              )}
 
-                <div>
-                  <h3 className="font-display text-2xl font-semibold text-foreground">
-                    Booking Confirmed!
-                  </h3>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    We&apos;ll call you shortly to confirm. Please arrive 10 minutes early.
+              {/* --------------------------- STEP 2: DATE & TIME --------------------------- */}
+              {step === 2 && (
+                <motion.div
+                  key="step-2"
+                  variants={stepVariants}
+                  custom={dir}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  transition={{ duration: 0.3, ease: "easeOut" }}
+                  className="flex flex-col gap-4"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <h3 className="font-display text-lg font-semibold text-foreground">
+                        Choose date &amp; time
+                      </h3>
+                      <p className="text-sm text-muted-foreground">
+                        {effectiveService && (
+                          <span className="font-medium text-primary">{effectiveService}</span>
+                        )}
+                      </p>
+                    </div>
+                    <Button variant="ghost" size="sm" className="h-9 shrink-0" onClick={back}>
+                      <ArrowLeft className="size-4" aria-hidden />
+                      Back
+                    </Button>
+                  </div>
+
+                  <div className="flex flex-col gap-1.5">
+                    <Label htmlFor="booking-date">Appointment date</Label>
+                    <Input
+                      id="booking-date"
+                      type="date"
+                      value={date}
+                      min={todayStr}
+                      max={maxDate}
+                      onChange={(e) => handleDateChange(e.target.value)}
+                      className="h-11 rounded-xl border-border bg-card"
+                    />
+                  </div>
+
+                  {date && availability?.closed && (
+                    <div className="flex items-start gap-2.5 rounded-2xl border border-amber-300/70 bg-amber-50 p-3.5 text-sm text-amber-900">
+                      <TriangleAlert className="mt-0.5 size-4 shrink-0 text-amber-500" aria-hidden />
+                      The clinic is closed on that day — please pick another day.
+                    </div>
+                  )}
+                  {date && availability?.past && (
+                    <div className="flex items-start gap-2.5 rounded-2xl border border-amber-300/70 bg-amber-50 p-3.5 text-sm text-amber-900">
+                      <TriangleAlert className="mt-0.5 size-4 shrink-0 text-amber-500" aria-hidden />
+                      That date has already passed — please pick today or a future date.
+                    </div>
+                  )}
+
+                  {date && availLoading && (
+                    <div className="flex flex-col gap-3">
+                      <Skeleton className="h-3.5 w-20" />
+                      <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+                        {Array.from({ length: 8 }).map((_, i) => (
+                          <Skeleton key={i} className="h-[44px] rounded-xl" />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {date && availability && !availability.closed && !availability.past && !availLoading && (
+                    <div className="flex flex-col gap-4">
+                      {availability.taken.length >= TIME_SLOTS.length ? (
+                        <div className="flex items-start gap-2.5 rounded-2xl border border-amber-300/70 bg-amber-50 p-3.5 text-sm text-amber-900">
+                          <TriangleAlert className="mt-0.5 size-4 shrink-0 text-amber-500" aria-hidden />
+                          Every slot for {prettyDate(date)} is booked. Please try another day.
+                        </div>
+                      ) : (
+                        <>
+                          {renderSlotGroup("Morning", <SunMedium className="size-3.5" />, MORNING_SLOTS)}
+                          {renderSlotGroup("Evening", <MoonStar className="size-3.5" />, EVENING_SLOTS)}
+                        </>
+                      )}
+                    </div>
+                  )}
+
+                  {date && !availability && !availLoading && (
+                    <p className="text-sm text-muted-foreground">
+                      Select a date to see available times.
+                    </p>
+                  )}
+
+                  <Button
+                    className="mt-1 h-12 rounded-full bg-gradient-to-r from-[#12588f] to-[#0f7f9c] text-[15px] font-semibold shadow-[0_10px_28px_rgb(18,88,143,0.35)] transition-opacity hover:opacity-95"
+                    disabled={!date || !slot || Boolean(availability?.closed)}
+                    onClick={() => goTo(3)}
+                  >
+                    Continue
+                    <ArrowRight className="size-4" aria-hidden />
+                  </Button>
+                </motion.div>
+              )}
+
+              {/* ----------------------------- STEP 3: DETAILS ----------------------------- */}
+              {step === 3 && (
+                <motion.div
+                  key="step-3"
+                  variants={stepVariants}
+                  custom={dir}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  transition={{ duration: 0.3, ease: "easeOut" }}
+                  className="flex flex-col gap-4"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <h3 className="font-display text-lg font-semibold text-foreground">
+                        Your details
+                      </h3>
+                      <p className="text-sm text-muted-foreground">We&apos;ll call to confirm.</p>
+                    </div>
+                    <Button variant="ghost" size="sm" className="h-9 shrink-0" onClick={back}>
+                      <ArrowLeft className="size-4" aria-hidden />
+                      Back
+                    </Button>
+                  </div>
+
+                  {/* Summary card (gradient border) */}
+                  <div className="rounded-2xl bg-gradient-to-br from-[#12588f] to-[#0f7f9c] p-px shadow-[0_10px_30px_rgb(18,88,143,0.15)]">
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 rounded-[calc(1rem-1px)] bg-card px-4 py-3 text-[13px] text-foreground">
+                      <span className="inline-flex items-center gap-1.5 font-semibold text-primary">
+                        <NotebookPen className="size-3.5" aria-hidden />
+                        <span className="max-w-44 truncate">{effectiveService}</span>
+                      </span>
+                      <span className="inline-flex items-center gap-1.5">
+                        <CalendarCheck className="size-3.5 text-primary" aria-hidden />
+                        {prettyDate(date)}
+                      </span>
+                      <span className="inline-flex items-center gap-1.5">
+                        <Clock className="size-3.5 text-primary" aria-hidden />
+                        {slot}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-3.5">
+                    <div className="flex flex-col gap-1.5">
+                      <Label htmlFor="booking-name">Full name *</Label>
+                      <div className="relative">
+                        <User
+                          className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+                          aria-hidden
+                        />
+                        <Input
+                          id="booking-name"
+                          value={form.name}
+                          onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                          placeholder="e.g. Ali Raza"
+                          autoComplete="name"
+                          aria-invalid={Boolean(errors.name)}
+                          className="h-11 rounded-xl border-border bg-card pl-10"
+                        />
+                      </div>
+                      {errors.name && <p className="text-xs text-destructive">{errors.name}</p>}
+                    </div>
+
+                    <div className="flex flex-col gap-1.5">
+                      <Label htmlFor="booking-phone">Phone number *</Label>
+                      <div className="relative">
+                        <Phone
+                          className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+                          aria-hidden
+                        />
+                        <Input
+                          id="booking-phone"
+                          type="tel"
+                          inputMode="tel"
+                          value={form.phone}
+                          onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
+                          placeholder="03XX-XXXXXXX"
+                          autoComplete="tel"
+                          aria-invalid={Boolean(errors.phone)}
+                          className="h-11 rounded-xl border-border bg-card pl-10"
+                        />
+                      </div>
+                      {errors.phone && <p className="text-xs text-destructive">{errors.phone}</p>}
+                    </div>
+
+                    <div className="flex flex-col gap-1.5">
+                      <Label htmlFor="booking-email">Email (optional)</Label>
+                      <div className="relative">
+                        <Mail
+                          className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+                          aria-hidden
+                        />
+                        <Input
+                          id="booking-email"
+                          type="email"
+                          value={form.email}
+                          onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
+                          placeholder="you@example.com"
+                          autoComplete="email"
+                          aria-invalid={Boolean(errors.email)}
+                          className="h-11 rounded-xl border-border bg-card pl-10"
+                        />
+                      </div>
+                      {errors.email && <p className="text-xs text-destructive">{errors.email}</p>}
+                    </div>
+
+                    <div className="flex flex-col gap-1.5">
+                      <Label htmlFor="booking-message">Message for the doctor (optional)</Label>
+                      <Textarea
+                        id="booking-message"
+                        value={form.message}
+                        onChange={(e) => setForm((f) => ({ ...f, message: e.target.value }))}
+                        placeholder="Anything the doctor should know? Pain, allergies, previous treatment…"
+                        rows={3}
+                        className="resize-none rounded-xl border-border bg-card"
+                      />
+                    </div>
+                  </div>
+
+                  <p className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <ShieldCheck className="size-4 shrink-0 text-green-600" aria-hidden />
+                    No advance payment — you pay at the clinic after your visit.
                   </p>
-                </div>
 
-                <div className="w-full rounded-2xl border border-border/70 bg-secondary/50 p-4 text-left">
-                  <dl className="flex flex-col gap-2 text-sm">
-                    <div className="flex justify-between gap-4">
-                      <dt className="text-muted-foreground">Name</dt>
-                      <dd className="font-semibold text-foreground">{confirmed.name}</dd>
+                  {submitError && (
+                    <div
+                      role="alert"
+                      className="flex items-start gap-2.5 rounded-2xl border border-destructive/40 bg-red-50 p-3.5 text-sm text-destructive"
+                    >
+                      <TriangleAlert className="mt-0.5 size-4 shrink-0" aria-hidden />
+                      {submitError}
                     </div>
-                    <div className="flex justify-between gap-4">
-                      <dt className="text-muted-foreground">Service</dt>
-                      <dd className="font-semibold text-foreground">{confirmed.service}</dd>
-                    </div>
-                    <div className="flex justify-between gap-4">
-                      <dt className="text-muted-foreground">Date</dt>
-                      <dd className="font-semibold text-foreground">
-                        {prettyDate(confirmed.date)}
-                      </dd>
-                    </div>
-                    <div className="flex justify-between gap-4">
-                      <dt className="text-muted-foreground">Time</dt>
-                      <dd className="font-semibold text-foreground">{confirmed.timeSlot}</dd>
-                    </div>
-                  </dl>
-                </div>
+                  )}
 
-                <div className="flex w-full flex-col gap-2.5 sm:flex-row">
                   <Button
-                    className="h-12 flex-1 rounded-full text-[15px] font-semibold"
-                    onClick={closeBooking}
+                    className="mt-1 h-12 rounded-full bg-gradient-to-r from-[#12588f] to-[#0f7f9c] text-[15px] font-semibold shadow-[0_10px_28px_rgb(18,88,143,0.4)] transition-opacity hover:opacity-95"
+                    disabled={submitting}
+                    onClick={() => void submit()}
                   >
-                    Done
+                    {submitting ? (
+                      <>
+                        <Loader2 className="size-4 animate-spin" aria-hidden />
+                        Booking…
+                      </>
+                    ) : (
+                      <>
+                        <CalendarCheck className="size-4" aria-hidden />
+                        Confirm Booking
+                      </>
+                    )}
                   </Button>
-                  <Button
-                    variant="outline"
-                    className="h-12 flex-1 rounded-full text-[15px] font-semibold"
-                    onClick={() => {
-                      setConfirmed(null);
-                      setService(null);
-                      setDate("");
-                      setSlot(null);
-                      setAvailability(null);
-                      setForm(emptyForm);
-                      setErrors({});
-                      setSubmitError(null);
-                      setDir(-1);
-                      setStep(1);
-                    }}
-                  >
-                    Book Another
-                  </Button>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+                </motion.div>
+              )}
+
+              {/* ------------------------------ STEP 4: DONE ------------------------------ */}
+              {step === 4 && confirmed && (
+                <motion.div
+                  key="step-4"
+                  variants={stepVariants}
+                  custom={dir}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  transition={{ duration: 0.3, ease: "easeOut" }}
+                  className="flex flex-col items-center gap-4 pb-2 pt-2 text-center"
+                >
+                  <div className="relative">
+                    {/* Confetti sparkles */}
+                    {[
+                      { c: "bg-primary", x: "-34px", y: "-6px", d: 0.15 },
+                      { c: "bg-teal-400", x: "30px", y: "-14px", d: 0.2 },
+                      { c: "bg-green-400", x: "-22px", y: "26px", d: 0.28 },
+                      { c: "bg-sky-400", x: "26px", y: "22px", d: 0.24 },
+                      { c: "bg-amber-400", x: "0px", y: "-26px", d: 0.32 },
+                    ].map((s, i) => (
+                      <motion.span
+                        key={i}
+                        initial={{ opacity: 0, scale: 0, x: 0, y: 0 }}
+                        animate={{ opacity: [0, 1, 0.9], scale: [0, 1.15, 0.85], x: s.x, y: s.y }}
+                        transition={{ delay: 0.25 + s.d, duration: 0.5, ease: "easeOut" }}
+                        className={`absolute left-1/2 top-1/2 size-2.5 rounded-full ${s.c}`}
+                        aria-hidden
+                      />
+                    ))}
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ type: "spring", stiffness: 260, damping: 16, delay: 0.05 }}
+                      className="flex size-20 items-center justify-center rounded-full bg-green-100 shadow-[0_12px_32px_rgb(22,163,74,0.25)]"
+                    >
+                      <CheckCircle2 className="size-12 text-green-600" aria-hidden />
+                    </motion.div>
+                  </div>
+
+                  <div>
+                    <h3 className="font-display text-2xl font-semibold text-foreground">
+                      Booking Confirmed!
+                    </h3>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      We&apos;ll call you shortly to confirm. Please arrive 10 minutes early.
+                    </p>
+                  </div>
+
+                  <div className="w-full rounded-2xl bg-gradient-to-br from-[#12588f] to-[#0f7f9c] p-px shadow-[0_10px_30px_rgb(18,88,143,0.15)]">
+                    <dl className="flex flex-col gap-2.5 rounded-[calc(1rem-1px)] bg-card p-4 text-left text-sm">
+                      <div className="flex justify-between gap-4">
+                        <dt className="text-muted-foreground">Name</dt>
+                        <dd className="font-semibold text-foreground">{confirmed.name}</dd>
+                      </div>
+                      <div className="flex justify-between gap-4">
+                        <dt className="text-muted-foreground">Purpose</dt>
+                        <dd className="max-w-52 truncate text-right font-semibold text-foreground">
+                          {confirmed.service}
+                        </dd>
+                      </div>
+                      <div className="flex justify-between gap-4">
+                        <dt className="text-muted-foreground">Date</dt>
+                        <dd className="font-semibold text-foreground">
+                          {prettyDate(confirmed.date)}
+                        </dd>
+                      </div>
+                      <div className="flex justify-between gap-4">
+                        <dt className="text-muted-foreground">Time</dt>
+                        <dd className="font-semibold text-foreground">{confirmed.timeSlot}</dd>
+                      </div>
+                    </dl>
+                  </div>
+
+                  <div className="flex w-full flex-col gap-2.5 sm:flex-row">
+                    <Button
+                      className="h-12 flex-1 rounded-full bg-gradient-to-r from-[#12588f] to-[#0f7f9c] text-[15px] font-semibold shadow-[0_10px_28px_rgb(18,88,143,0.35)] transition-opacity hover:opacity-95"
+                      onClick={closeBooking}
+                    >
+                      Done
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="h-12 flex-1 rounded-full text-[15px] font-semibold"
+                      onClick={() => {
+                        setConfirmed(null);
+                        setService(null);
+                        setPurposeText("");
+                        setDate("");
+                        setSlot(null);
+                        setAvailability(null);
+                        setForm(emptyForm);
+                        setErrors({});
+                        setSubmitError(null);
+                        setDir(-1);
+                        setStep(1);
+                      }}
+                    >
+                      Book Another
+                    </Button>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

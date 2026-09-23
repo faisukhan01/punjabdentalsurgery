@@ -127,7 +127,7 @@ function AdminShell({ pin, onLogout, onUnauthorized, onExit }: AdminShellProps) 
   return (
     <div className="flex min-h-screen flex-col bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-[#0c3054] text-sky-50 shadow-md">
+      <header className="sticky top-0 z-40 bg-gradient-to-r from-[#0c3054] via-[#0e3d68] to-[#12588f] text-sky-50 shadow-md">
         <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-2 px-3 sm:px-6 lg:px-8">
           <div className="flex min-w-0 items-center gap-2.5">
             <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground">

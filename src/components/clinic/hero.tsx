@@ -82,10 +82,14 @@ export function Hero() {
 
         <motion.h1
           variants={item}
-          className="mt-5 max-w-3xl font-display text-[2.75rem] font-medium leading-[1.04] text-balance text-white sm:text-6xl lg:text-[4.5rem]"
+          className="mt-5 max-w-3xl font-display text-[2.75rem] font-semibold leading-[1.04] text-balance text-white sm:text-6xl lg:text-[4.5rem]"
         >
           Gentle dentistry,{" "}
-          <em className="italic text-[#1a9aa2]">beautiful smiles.</em>
+          <em
+            className="font-bold italic text-[#12588f] [text-shadow:0_2px_24px_rgba(255,255,255,0.55),0_0_10px_rgba(255,255,255,0.4)]"
+          >
+            beautiful smiles.
+          </em>
         </motion.h1>
 
         <motion.p

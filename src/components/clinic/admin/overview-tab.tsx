@@ -56,7 +56,7 @@ function StatCard({
   decimals?: number;
 }) {
   return (
-    <div className="flex flex-col gap-2 rounded-3xl border border-border/60 bg-card p-4 shadow-[0_8px_30px_rgb(18,88,143,0.06)] sm:p-5">
+    <div className="flex flex-col gap-2 rounded-3xl border border-border/60 bg-card p-4 shadow-[0_8px_30px_rgb(18,88,143,0.06)] transition-shadow hover:shadow-[0_12px_36px_rgb(18,88,143,0.12)] sm:p-5">
       <div className="flex items-center justify-between">
         <span className={cn("flex size-9 items-center justify-center rounded-xl", tint)}>
           <Icon className="size-4.5" aria-hidden />
@@ -124,7 +124,7 @@ export function OverviewTab({ stats, loading, onRefresh }: OverviewTabProps) {
           <StatCard icon={CalendarDays} label="Today's Bookings" value={a.todayBookings} tint="bg-secondary text-primary" />
           <StatCard icon={Clock3} label="Appointments Today" value={a.todaysAppointments} tint="bg-secondary text-primary" />
           <StatCard icon={Hourglass} label="Pending" value={a.PENDING} tint="bg-amber-100 text-amber-700" />
-          <StatCard icon={CheckCircle2} label="Confirmed" value={a.CONFIRMED} tint="bg-red-100 text-red-700" />
+          <StatCard icon={CheckCircle2} label="Confirmed" value={a.CONFIRMED} tint="bg-blue-100 text-blue-700" />
           <StatCard icon={CheckCircle2} label="Completed" value={a.COMPLETED} tint="bg-green-100 text-green-700" />
           <StatCard icon={XCircle} label="Cancelled" value={a.CANCELLED} tint="bg-red-100 text-red-600" />
         </div>
@@ -153,7 +153,7 @@ export function OverviewTab({ stats, loading, onRefresh }: OverviewTabProps) {
           <h3 className="mb-3 text-sm font-semibold text-foreground">Website Visits (Last 7 Days)</h3>
           <div className="mb-2 flex gap-4 text-xs text-muted-foreground">
             <span className="inline-flex items-center gap-1.5">
-              <span className="size-2 rounded-full bg-red-600" aria-hidden /> Visits
+              <span className="size-2 rounded-full bg-[#12588f]" aria-hidden /> Visits
             </span>
             <span className="inline-flex items-center gap-1.5">
               <span className="size-2 rounded-full bg-amber-600" aria-hidden /> Unique
