@@ -4,32 +4,21 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { format, parseISO } from "date-fns";
 import {
-  Activity,
-  Anchor,
   ArrowLeft,
   ArrowRight,
-  Baby,
   CalendarCheck,
   Check,
   CheckCircle2,
   Clock,
-  Crown,
   Loader2,
   Mail,
   NotebookPen,
   PenLine,
   Phone,
   ShieldCheck,
-  Smile,
-  Sparkles,
-  Star,
   Stethoscope,
-  Syringe,
   TriangleAlert,
   User,
-  Wrench,
-  Zap,
-  type LucideIcon,
 } from "lucide-react";
 import {
   Dialog,
@@ -86,33 +75,8 @@ interface ConfirmedAppointment {
 const STEP_LABELS = ["Purpose", "Date & Time", "Details"] as const;
 const CUSTOM_SLOT = "__custom__";
 const PURPOSE_MAX = 300;
-const OTHER = "__other__";
 
 const emptyForm: BookingForm = { name: "", phone: "", email: "" };
-
-/* --------------------- Treatment options (Step 1) --------------------- */
-
-interface TreatmentOption {
-  /** Canonical service name stored in the DB. */
-  value: string;
-  label: string;
-  icon: LucideIcon;
-}
-
-/** One card per clinic service (matches the Services section 1:1). */
-const TREATMENT_OPTIONS: readonly TreatmentOption[] = [
-  { value: "General Dental Checkup", label: "General Checkup", icon: Stethoscope },
-  { value: "Teeth Cleaning & Scaling", label: "Cleaning & Scaling", icon: Sparkles },
-  { value: "Tooth Filling", label: "Tooth Filling", icon: Wrench },
-  { value: "Root Canal Treatment", label: "Root Canal", icon: Activity },
-  { value: "Tooth Extraction", label: "Extraction", icon: Syringe },
-  { value: "Teeth Whitening", label: "Teeth Whitening", icon: Star },
-  { value: "Braces & Orthodontics", label: "Braces & Aligners", icon: Smile },
-  { value: "Dental Implants", label: "Dental Implants", icon: Anchor },
-  { value: "Crown & Bridge", label: "Crown & Bridge", icon: Crown },
-  { value: "Kids Dentistry", label: "Kids Dentistry", icon: Baby },
-  { value: "Emergency Dental Care", label: "Pain / Emergency", icon: Zap },
-];
 
 /** Slide direction-aware step transitions (dir: 1 = forward, -1 = back). */
 const stepVariants = {
@@ -163,7 +127,6 @@ export function BookingModal() {
   const [step, setStep] = useState<Step>(1);
   const [dir, setDir] = useState<1 | -1>(1);
 
-  const [selected, setSelected] = useState<string | null>(null);
   const [reason, setReason] = useState("");
   const [date, setDate] = useState("");
   const [slot, setSlot] = useState<string | null>(null);
@@ -180,24 +143,26 @@ export function BookingModal() {
   const todayStr = useMemo(() => clinicTodayStr(), []);
   const maxDate = useMemo(() => maxDateStr(), []);
 
-  const isOther = selected === OTHER;
+  /**
+   * Visit type: a service tapped in the Services section, otherwise a
+   * simple General Checkup. The written reason below travels as the note.
+   */
+  const visitService = useMemo(() => {
+    const pre = preselectedService?.trim() ?? "";
+    return pre.length >= 3 ? pre.slice(0, 120) : "General Dental Checkup";
+  }, [preselectedService]);
 
-  /** Service sent to the API: the selected treatment, or the typed reason for "Something else". */
-  const effectiveService = useMemo(() => {
-    if (!selected) return null;
-    if (isOther) {
-      const t = reason.trim();
-      return t.length >= 3 ? t.slice(0, PURPOSE_MAX) : null;
-    }
-    return selected;
-  }, [selected, isOther, reason]);
+  const visitLabel =
+    visitService === "General Dental Checkup" ? "General Checkup" : visitService;
 
-  /** Optional note for the doctor (the written reason/problem). */
+  /** Service sent to the API (always resolved — zero-friction step 1). */
+  const effectiveService = visitService;
+
+  /** Optional note for the doctor (the written problem / purpose). */
   const doctorNote = useMemo(() => {
-    if (!selected || isOther) return undefined;
     const t = reason.trim();
     return t ? t.slice(0, 500) : undefined;
-  }, [selected, isOther, reason]);
+  }, [reason]);
 
   /** Resolved time slot: a dropdown label or the custom time as "6:45 PM". */
   const effectiveSlot = useMemo(() => {
@@ -246,12 +211,9 @@ export function BookingModal() {
   /* ---------- Reset every time the dialog opens ---------- */
   useEffect(() => {
     if (!bookingOpen) return;
-    const pre = preselectedService?.trim() ?? "";
-    const match = TREATMENT_OPTIONS.find((o) => o.value === pre);
     setDir(1);
-    setSelected(match ? match.value : null);
     setReason("");
-    setStep(match ? 2 : 1);
+    setStep(1);
     // Prefill today's date so patients see open slots immediately.
     const today = clinicTodayStr();
     setDate(today);
@@ -477,117 +439,46 @@ export function BookingModal() {
                     </span>
                     <div>
                       <h3 className="font-display text-lg font-semibold leading-snug text-foreground">
-                        What brings you in today?
+                        How can we help you today?
                       </h3>
                       <p className="text-sm text-muted-foreground">
-                        Select a treatment to continue.
+                        Your visit type — then add a note if you like.
                       </p>
                     </div>
                   </div>
 
-                  {/* Treatment selection grid */}
-                  <div
-                    className="grid grid-cols-2 gap-2.5"
-                    role="group"
-                    aria-label="Treatment options"
-                  >
-                    {TREATMENT_OPTIONS.map((opt) => {
-                      const active = selected === opt.value;
-                      const Icon = opt.icon;
-                      return (
-                        <button
-                          key={opt.value}
-                          type="button"
-                          onClick={() => setSelected(opt.value)}
-                          aria-pressed={active}
-                          className={`group relative flex items-center gap-2.5 rounded-2xl border p-3 text-left transition-all duration-200 ${
-                            active
-                              ? "border-primary/70 bg-secondary shadow-[0_8px_20px_rgb(18,88,143,0.14)] ring-1 ring-primary/50"
-                              : "border-border bg-background hover:border-primary/35 hover:bg-secondary/40"
-                          }`}
-                        >
-                          <span
-                            className={`flex size-8 shrink-0 items-center justify-center rounded-xl transition-colors ${
-                              active
-                                ? "bg-gradient-to-br from-[#12588f] to-[#0f7f9c] text-white shadow-[0_4px_10px_rgb(18,88,143,0.35)]"
-                                : "bg-secondary text-primary group-hover:bg-accent"
-                            }`}
-                            aria-hidden
-                          >
-                            <Icon className="size-4" />
-                          </span>
-                          <span
-                            className={`text-[13px] font-semibold leading-tight ${
-                              active ? "text-primary" : "text-foreground/85"
-                            }`}
-                          >
-                            {opt.label}
-                          </span>
-                          {active && (
-                            <span
-                              className="absolute right-2 top-2 flex size-4.5 items-center justify-center rounded-full bg-primary text-primary-foreground"
-                              aria-hidden
-                            >
-                              <Check className="size-3" strokeWidth={3} />
-                            </span>
-                          )}
-                        </button>
-                      );
-                    })}
-
-                    {/* Something else — free text becomes the purpose */}
-                    <button
-                      type="button"
-                      onClick={() => setSelected(OTHER)}
-                      aria-pressed={isOther}
-                      className={`group relative flex items-center gap-2.5 rounded-2xl border p-3 text-left transition-all duration-200 ${
-                        isOther
-                          ? "border-primary/70 bg-secondary shadow-[0_8px_20px_rgb(18,88,143,0.14)] ring-1 ring-primary/50"
-                          : "border-dashed border-border bg-background hover:border-primary/35 hover:bg-secondary/40"
-                      }`}
+                  {/* Visit type — simple & friendly, ready to go */}
+                  <div className="flex items-center gap-3 rounded-2xl border border-primary/30 bg-secondary/60 p-4 shadow-[0_8px_20px_rgb(18,88,143,0.08)]">
+                    <span
+                      className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#12588f] to-[#0f7f9c] text-white shadow-[0_6px_14px_rgb(18,88,143,0.35)]"
+                      aria-hidden
                     >
-                      <span
-                        className={`flex size-8 shrink-0 items-center justify-center rounded-xl transition-colors ${
-                          isOther
-                            ? "bg-gradient-to-br from-[#12588f] to-[#0f7f9c] text-white shadow-[0_4px_10px_rgb(18,88,143,0.35)]"
-                            : "bg-secondary text-primary group-hover:bg-accent"
-                        }`}
-                        aria-hidden
-                      >
-                        <PenLine className="size-4" />
-                      </span>
-                      <span
-                        className={`text-[13px] font-semibold leading-tight ${
-                          isOther ? "text-primary" : "text-foreground/85"
-                        }`}
-                      >
-                        Something else
-                      </span>
-                      {isOther && (
-                        <span
-                          className="absolute right-2 top-2 flex size-4.5 items-center justify-center rounded-full bg-primary text-primary-foreground"
-                          aria-hidden
-                        >
-                          <Check className="size-3" strokeWidth={3} />
-                        </span>
-                      )}
-                    </button>
+                      <Stethoscope className="size-5" />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[15px] font-bold text-primary">{visitLabel}</p>
+                      <p className="mt-0.5 text-xs leading-snug text-muted-foreground">
+                        {visitService === "General Dental Checkup"
+                          ? "Not sure what you need? A checkup is the perfect start."
+                          : "Selected from our services."}
+                      </p>
+                    </div>
+                    <span
+                      className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground"
+                      aria-hidden
+                    >
+                      <Check className="size-3.5" strokeWidth={3} />
+                    </span>
                   </div>
 
-                  {/* Optional reason / problem — box stays empty, no placeholder */}
+                  {/* Optional problem / purpose — box stays empty, no placeholder */}
                   <div className="flex flex-col gap-1.5">
                     <div className="flex items-end justify-between gap-3">
                       <Label htmlFor="booking-reason" className="text-[13px]">
-                        {isOther ? (
-                          "Describe your problem"
-                        ) : (
-                          <>
-                            Reason or problem{" "}
-                            <span className="font-normal text-muted-foreground">
-                              (optional)
-                            </span>
-                          </>
-                        )}
+                        Your problem or purpose{" "}
+                        <span className="font-normal text-muted-foreground">
+                          (optional)
+                        </span>
                       </Label>
                       {reason.length > 0 && (
                         <span className="tabular-nums text-xs text-muted-foreground/60">
@@ -600,23 +491,17 @@ export function BookingModal() {
                       value={reason}
                       onChange={(e) => setReason(e.target.value)}
                       maxLength={PURPOSE_MAX}
-                      rows={3}
-                      className="min-h-20 resize-none rounded-2xl border-border bg-background text-[15px] leading-relaxed"
+                      rows={4}
+                      className="min-h-24 resize-none rounded-2xl border-border bg-background text-[15px] leading-relaxed"
                     />
-                    {isOther && reason.trim().length > 0 && reason.trim().length < 3 ? (
-                      <p className="text-xs text-destructive">Please write a little more.</p>
-                    ) : (
-                      <p className="text-xs text-muted-foreground">
-                        {isOther
-                          ? "Tell us briefly what you are experiencing — the doctor will review it."
-                          : "The doctor will review this before your visit."}
-                      </p>
-                    )}
+                    <p className="text-xs text-muted-foreground">
+                      Any pain, sensitivity or reason for your visit — the doctor
+                      reviews this before you arrive.
+                    </p>
                   </div>
 
                   <Button
-                    className="mt-1 h-12 w-full rounded-full bg-gradient-to-r from-[#12588f] to-[#0f7f9c] text-[15px] font-semibold shadow-[0_10px_28px_rgb(18,88,143,0.35)] transition-all hover:opacity-95 disabled:bg-muted disabled:bg-none disabled:text-muted-foreground disabled:shadow-none"
-                    disabled={!effectiveService}
+                    className="mt-1 h-12 w-full rounded-full bg-gradient-to-r from-[#12588f] to-[#0f7f9c] text-[15px] font-semibold shadow-[0_10px_28px_rgb(18,88,143,0.35)] transition-all hover:opacity-95"
                     onClick={() => goTo(2)}
                   >
                     Continue
@@ -984,7 +869,7 @@ export function BookingModal() {
                       { c: "bg-teal-400", x: "30px", y: "-14px", d: 0.2 },
                       { c: "bg-green-400", x: "-22px", y: "26px", d: 0.28 },
                       { c: "bg-sky-400", x: "26px", y: "22px", d: 0.24 },
-                      { c: "bg-amber-400", x: "0px", y: "-26px", d: 0.32 },
+                      { c: "bg-primary", x: "0px", y: "-26px", d: 0.32 },
                     ].map((s, i) => (
                       <motion.span
                         key={i}
@@ -1049,7 +934,6 @@ export function BookingModal() {
                       className="h-12 flex-1 rounded-full text-[15px] font-semibold"
                       onClick={() => {
                         setConfirmed(null);
-                        setSelected(null);
                         setReason("");
                         const today = clinicTodayStr();
                         setDate(today);

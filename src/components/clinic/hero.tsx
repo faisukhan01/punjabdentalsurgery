@@ -103,25 +103,24 @@ export function Hero() {
 
         <motion.h1
           variants={item}
-          className="mx-auto mt-4 max-w-3xl font-display text-[2.7rem] font-semibold leading-[1.1] tracking-[-0.01em] text-balance text-white [text-shadow:0_2px_28px_rgba(0,0,0,0.5)] sm:mx-0 sm:mt-5 sm:text-6xl sm:leading-[1.06] lg:text-[4.4rem]"
+          className="mx-auto mt-4 max-w-3xl font-display text-[2.6rem] font-semibold leading-[1.12] text-balance text-white [text-shadow:0_2px_28px_rgba(0,0,0,0.5)] sm:mx-0 sm:mt-5 sm:text-6xl sm:leading-[1.08] lg:text-[4.25rem]"
         >
-          Where{" "}
-          <em className="bg-gradient-to-br from-[#fff3d6] via-[#f7d489] to-[#e5a44a] bg-clip-text font-bold italic text-transparent drop-shadow-[0_2px_16px_rgba(0,0,0,0.45)]">
-            beautiful smiles
-          </em>{" "}
-          begin.
+          <span className="bg-gradient-to-br from-[#d6ecff] via-[#9ed2ff] to-[#54a8ef] bg-clip-text text-transparent drop-shadow-[0_2px_16px_rgba(0,0,0,0.45)]">
+            Happy smiles
+          </span>{" "}
+          start with gentle care.
         </motion.h1>
 
         <motion.p
           variants={item}
           className="mx-auto mt-5 max-w-md text-[15px] leading-relaxed text-white/85 sm:mx-0 sm:max-w-lg sm:text-lg"
         >
-          Kind, painless dentistry for your whole family — honest advice, careful
-          treatment and a calm, comfortable visit, every time.
+          Gentle, painless dentistry for your whole family — because every
+          visit should end in a smile.
         </motion.p>
 
         <motion.div variants={item} className="mt-3 flex justify-center sm:justify-start">
-          <p dir="rtl" lang="ur" className="text-[15px] text-amber-50/70">
+          <p dir="rtl" lang="ur" className="text-[15px] text-white/75">
             {CLINIC.taglineUr}
           </p>
         </motion.div>
