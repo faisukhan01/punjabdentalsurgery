@@ -372,6 +372,12 @@ export function BookingModal() {
     <Dialog open={bookingOpen} onOpenChange={(open) => !open && closeBooking()}>
       <DialogContent
         showCloseButton={false}
+        // Chromium lets clicks pass through its native <input type="date">
+        // calendar popup onto the page (crbug 725566) — a stray click used to
+        // land on the overlay and wipe a half-filled booking. Dismissal now
+        // happens only via the X button or Escape (safer for a booking form).
+        onPointerDownOutside={(e) => e.preventDefault()}
+        onInteractOutside={(e) => e.preventDefault()}
         className={cn(
           "gap-0 overflow-hidden p-0",
           // Mobile: floating bottom sheet — 8px air on every side, fully rounded
