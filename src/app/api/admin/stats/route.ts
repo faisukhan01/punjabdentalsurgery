@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { ensureAppointmentTokenSchema } from "@/lib/db-migrate";
 import { isAdminRequest, unauthorized } from "@/lib/admin";
 import { KARACHI_OFFSET_MS, clinicTodayStr } from "@/lib/clinic";
 
@@ -23,6 +24,8 @@ export async function GET(req: NextRequest) {
   if (!isAdminRequest(req)) return unauthorized();
 
   try {
+    await ensureAppointmentTokenSchema();
+
     const now = new Date();
     const todayStr = clinicTodayStr(now);
 

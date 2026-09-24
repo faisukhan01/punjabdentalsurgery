@@ -44,7 +44,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { useClinicStore } from "@/components/clinic/store";
 import { cn } from "@/lib/utils";
-import { TIME_SLOTS, clinicTodayStr } from "@/lib/clinic";
+import { TIME_SLOTS, clinicTodayStr, formatToken } from "@/lib/clinic";
 
 /* ------------------------------- Types ------------------------------- */
 
@@ -64,6 +64,7 @@ interface BookingForm {
 
 interface ConfirmedAppointment {
   id: string;
+  tokenNumber: number;
   name: string;
   service: string;
   date: string;
@@ -319,7 +320,9 @@ export function BookingModal() {
       goTo(4);
       toast({
         title: "Booking confirmed 🎉",
-        description: `${prettyDate(data.appointment.date)} at ${data.appointment.timeSlot}.`,
+        description: `Token ${formatToken(data.appointment.tokenNumber)} — ${prettyDate(
+          data.appointment.date
+        )} at ${data.appointment.timeSlot}.`,
       });
     } catch {
       setSubmitError("Network error — please check your connection and try again.");
@@ -959,6 +962,20 @@ export function BookingModal() {
                     <p className="mt-1 text-sm text-muted-foreground">
                       We&apos;ll call you shortly to confirm — please arrive 10
                       minutes early.
+                    </p>
+                  </div>
+
+                  {/* Token number — the patient's queue position for the day */}
+                  <div className="w-full rounded-2xl border border-primary/20 bg-primary/5 px-4 py-4">
+                    <p className={cn(MICRO, "text-center")}>Your token number</p>
+                    <p
+                      aria-label={`Token number ${formatToken(confirmed.tokenNumber)}`}
+                      className="mt-1.5 text-center font-display text-[2.75rem] font-bold leading-none tabular-nums tracking-wide text-primary"
+                    >
+                      {formatToken(confirmed.tokenNumber)}
+                    </p>
+                    <p className="mt-2 text-center text-xs text-muted-foreground">
+                      Show this number at the reception when you arrive.
                     </p>
                   </div>
 

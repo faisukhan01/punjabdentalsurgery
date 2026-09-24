@@ -58,6 +58,13 @@ export const APPOINTMENT_STATUSES = [
 
 export type AppointmentStatus = (typeof APPOINTMENT_STATUSES)[number];
 
+/* ---------- Token numbers (per-day queue: 1 -> "001", resets every day) ---------- */
+
+/** 1 -> "001", 12 -> "012". Non-positive/unknown values render as a dash. */
+export function formatToken(n: number | null | undefined): string {
+  return typeof n === "number" && n > 0 ? String(n).padStart(3, "0") : "—";
+}
+
 /* ---------- Timezone helpers (clinic runs on Asia/Karachi, UTC+5, no DST) ---------- */
 
 export const KARACHI_OFFSET_MS = 5 * 60 * 60 * 1000;

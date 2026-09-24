@@ -11,6 +11,7 @@ export interface AdminAppointment {
   date: string;
   timeSlot: string;
   message: string | null;
+  tokenNumber: number;
   status: AppointmentStatus;
   createdAt: string;
   updatedAt: string;

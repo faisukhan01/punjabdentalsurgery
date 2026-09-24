@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
+import { ensureAppointmentTokenSchema } from "@/lib/db-migrate";
 import { isAdminRequest, unauthorized } from "@/lib/admin";
 import {
   clinicTodayStr,
@@ -122,23 +124,55 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const appointment = await db.appointment.create({
-      data: {
-        name,
-        phone,
-        email: email ? email : null,
-        service,
-        date,
-        timeSlot,
-        message: message ? message : null,
-      },
-    });
+    // Daily token number — the patient's queue position for that day (shown
+    // as 001, 002, … and reset every day). The (date, tokenNumber) unique
+    // index makes simultaneous bookings race-safe: on the rare collision we
+    // simply retry with the next free number of the day.
+    await ensureAppointmentTokenSchema();
+
+    type CreatedAppointment = Awaited<ReturnType<typeof db.appointment.create>>;
+    let appointment: CreatedAppointment | null = null;
+    let tokenNumber = 0;
+    for (let attempt = 0; attempt < 5 && !appointment; attempt += 1) {
+      const last = await db.appointment.findFirst({
+        where: { date },
+        orderBy: { tokenNumber: "desc" },
+        select: { tokenNumber: true },
+      });
+      tokenNumber = (last?.tokenNumber ?? 0) + 1;
+      try {
+        appointment = await db.appointment.create({
+          data: {
+            name,
+            phone,
+            email: email ? email : null,
+            service,
+            date,
+            timeSlot,
+            message: message ? message : null,
+            tokenNumber,
+          },
+        });
+      } catch (err) {
+        if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
+          continue; // another booking took this number first — take the next
+        }
+        throw err;
+      }
+    }
+    if (!appointment) {
+      return NextResponse.json(
+        { error: "Booking is taking longer than expected — please try again in a moment." },
+        { status: 503 }
+      );
+    }
 
     return NextResponse.json(
       {
         ok: true,
         appointment: {
           id: appointment.id,
+          tokenNumber: appointment.tokenNumber,
           name: appointment.name,
           service: appointment.service,
           date: appointment.date,
@@ -165,6 +199,8 @@ export async function GET(req: NextRequest) {
   if (!isAdminRequest(req)) return unauthorized();
 
   try {
+    await ensureAppointmentTokenSchema();
+
     const sp = req.nextUrl.searchParams;
     const status = sp.get("status") || "";
     const q = (sp.get("q") || "").trim();
@@ -172,26 +208,80 @@ export async function GET(req: NextRequest) {
     const page = Math.max(1, parseInt(sp.get("page") || "1", 10) || 1);
     const pageSize = Math.min(50, Math.max(5, parseInt(sp.get("pageSize") || "20", 10) || 20));
 
+    // "003" / "3" — a pure number also matches the day's token number.
+    const tokenQuery = /^\d{1,4}$/.test(q) ? parseInt(q, 10) : null;
+
     const where: Record<string, unknown> = {};
     if (status && ["PENDING", "CONFIRMED", "COMPLETED", "CANCELLED"].includes(status)) {
       where.status = status;
     }
     if (date) where.date = date;
     if (q) {
-      where.OR = [
+      const or: Record<string, unknown>[] = [
         { name: { contains: q } },
         { phone: { contains: q } },
         { service: { contains: q } },
       ];
+      if (tokenQuery && tokenQuery > 0) or.push({ tokenNumber: tokenQuery });
+      where.OR = or;
     }
 
-    const [appointments, total, pending, confirmed, completed, cancelled] = await Promise.all([
-      db.appointment.findMany({
+    // Token lookups answer "who is at reception right now" — today's patients
+    // come first, then upcoming days, then the most recent past. Every other
+    // search keeps the oldest-first queue order.
+    const isTokenLookup = Boolean(tokenQuery && tokenQuery > 0);
+
+    let appointments: Array<Record<string, unknown>>;
+    if (isTokenLookup) {
+      // Raw SQL so the ordering can be relative to "today" (Prisma's orderBy
+      // cannot express date comparisons). All values are parameterised.
+      const conds: string[] = [];
+      const args: (string | number)[] = [];
+      if (where.status) {
+        conds.push(`"status" = ?`);
+        args.push(status);
+      }
+      if (date) {
+        conds.push(`"date" = ?`);
+        args.push(date);
+      }
+      const like = `%${q}%`;
+      conds.push(`("name" LIKE ? OR "phone" LIKE ? OR "service" LIKE ? OR "tokenNumber" = ?)`);
+      args.push(like, like, like, tokenQuery as number);
+      const whereSql = `WHERE ${conds.join(" AND ")}`;
+      const today = clinicTodayStr();
+
+      appointments = await db.$queryRawUnsafe<Array<Record<string, unknown>>>(
+        `SELECT * FROM "Appointment" ${whereSql}
+         ORDER BY CASE WHEN "date" = ? THEN 0 WHEN "date" > ? THEN 1 ELSE 2 END ASC,
+                  CASE WHEN "date" > ? THEN "date" ELSE '9999-12-31' END ASC,
+                  CASE WHEN "date" < ? THEN "date" ELSE '0000-01-01' END DESC,
+                  "tokenNumber" ASC, "createdAt" ASC
+         LIMIT ? OFFSET ?`,
+        ...args,
+        today,
+        today,
+        today,
+        today,
+        pageSize,
+        (page - 1) * pageSize
+      );
+      // Raw rows carry epoch-ms datetimes — restore the ISO strings that the
+      // Prisma branch returns so both shapes stay identical for the client.
+      for (const row of appointments) {
+        row.createdAt = new Date(row.createdAt as number).toISOString();
+        row.updatedAt = new Date(row.updatedAt as number).toISOString();
+      }
+    } else {
+      appointments = await db.appointment.findMany({
         where,
         orderBy: { createdAt: "asc" },
         skip: (page - 1) * pageSize,
         take: pageSize,
-      }),
+      });
+    }
+
+    const [total, pending, confirmed, completed, cancelled] = await Promise.all([
       db.appointment.count({ where }),
       db.appointment.count({ where: { status: "PENDING" } }),
       db.appointment.count({ where: { status: "CONFIRMED" } }),
