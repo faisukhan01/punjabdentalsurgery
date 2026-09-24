@@ -11,6 +11,7 @@ import {
   Check,
   CheckCircle2,
   Clock,
+  Download,
   Loader2,
   Mail,
   NotebookPen,
@@ -45,6 +46,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useClinicStore } from "@/components/clinic/store";
 import { cn } from "@/lib/utils";
 import { TIME_SLOTS, clinicTodayStr, formatToken } from "@/lib/clinic";
+import { downloadReceiptPdf } from "@/lib/receipt-pdf";
 
 /* ------------------------------- Types ------------------------------- */
 
@@ -152,6 +154,7 @@ export function BookingModal() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [confirmed, setConfirmed] = useState<ConfirmedAppointment | null>(null);
+  const [receiptBusy, setReceiptBusy] = useState(false);
 
   const todayStr = useMemo(() => clinicTodayStr(), []);
   const maxDate = useMemo(() => maxDateStr(), []);
@@ -330,6 +333,36 @@ export function BookingModal() {
       setSubmitting(false);
     }
   };
+
+  /* ---------- Receipt download (Step 4) ---------- */
+  const handleDownloadReceipt = useCallback(async () => {
+    if (!confirmed) return;
+    setReceiptBusy(true);
+    try {
+      await downloadReceiptPdf({
+        tokenNumber: confirmed.tokenNumber,
+        name: confirmed.name,
+        phone: form.phone.trim(),
+        email: form.email.trim() || null,
+        service: confirmed.service,
+        date: confirmed.date,
+        timeSlot: confirmed.timeSlot,
+        message: doctorNote ?? null,
+      });
+      toast({
+        title: "Receipt downloaded",
+        description: `Token ${formatToken(confirmed.tokenNumber)} — keep it handy for the reception.`,
+      });
+    } catch {
+      toast({
+        variant: "destructive",
+        title: "Couldn't generate the receipt",
+        description: "Please try again, or take a screenshot of this screen instead.",
+      });
+    } finally {
+      setReceiptBusy(false);
+    }
+  }, [confirmed, form.phone, form.email, doctorNote, toast]);
 
   /* ---------- Step rail ---------- */
 
@@ -1006,9 +1039,28 @@ export function BookingModal() {
                     </div>
                   </dl>
 
+                  <Button
+                    className={BTN_PRIMARY}
+                    onClick={handleDownloadReceipt}
+                    disabled={receiptBusy}
+                  >
+                    {receiptBusy ? (
+                      <>
+                        <Loader2 className="size-4 animate-spin" aria-hidden />
+                        Preparing receipt…
+                      </>
+                    ) : (
+                      <>
+                        <Download className="size-4" aria-hidden />
+                        Download Receipt (PDF)
+                      </>
+                    )}
+                  </Button>
+
                   <div className="flex w-full flex-col gap-2.5 sm:flex-row">
                     <Button
-                      className={cn(BTN_PRIMARY, "flex-1")}
+                      variant="outline"
+                      className="h-12 w-full flex-1 rounded-xl text-[15px] font-semibold"
                       onClick={closeBooking}
                     >
                       Done
