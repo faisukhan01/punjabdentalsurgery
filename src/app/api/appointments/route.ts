@@ -13,12 +13,13 @@ export const dynamic = "force-dynamic";
 
 /* ----------------------------- Slot helpers ----------------------------- */
 // Time slots are free-form labels like "5:00 PM", "6:45 PM" — patients pick
-// from the dropdown (30-min grid) or type a custom time. Internally we work
-// in minutes-since-midnight so custom times never collide with booked slots.
+// from the dropdown or type a custom time. Internally we work in
+// minutes-since-midnight so every time value can be validated and
+// canonicalised. Multiple patients may share the same time — slots never
+// close, the queue is handled on-site via daily token numbers.
 
 const CLINIC_OPEN_MIN = 17 * 60; // 5:00 PM
 const CLINIC_CLOSE_MIN = 24 * 60; // 12:00 AM (midnight)
-const SLOT_MINUTES = 30; // one appointment occupies half an hour
 
 /** "6:45 PM" -> 1145 (minutes since midnight), or null when malformed. */
 function parseSlotMinutes(raw: string): number | null {
@@ -104,23 +105,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         { error: "The clinic opens at 5:00 PM — please choose a time between 5:00 PM and 12:00 AM." },
         { status: 400 }
-      );
-    }
-
-    // Overlap guard: every appointment occupies a 30-minute window, so a new
-    // booking (dropdown or custom time) must not fall inside an existing one.
-    const sameDay = await db.appointment.findMany({
-      where: { date, status: { not: "CANCELLED" } },
-      select: { timeSlot: true },
-    });
-    const conflict = sameDay.some((a) => {
-      const m = parseSlotMinutes(a.timeSlot);
-      return m !== null && Math.abs(m - requested) < SLOT_MINUTES;
-    });
-    if (conflict) {
-      return NextResponse.json(
-        { error: "Sorry, that time is too close to another booking. Please choose another slot." },
-        { status: 409 }
       );
     }
 

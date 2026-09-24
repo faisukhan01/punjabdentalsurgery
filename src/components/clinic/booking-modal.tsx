@@ -55,7 +55,6 @@ type Step = 1 | 2 | 3 | 4;
 interface Availability {
   closed: boolean;
   past: boolean;
-  taken: string[];
 }
 
 interface BookingForm {
@@ -200,9 +199,9 @@ export function BookingModal() {
     return mins < 17 * 60 || mins >= 24 * 60;
   }, [slot, customTime]);
 
-  const slotTaken = Boolean(effectiveSlot && availability?.taken.includes(effectiveSlot));
-
   /* ---------- Availability fetching ---------- */
+  // Slots never close — several patients may share the same time. This check
+  // only drives the "closed day" / "past date" notices below.
   const loadAvailability = useCallback(async (dateStr: string) => {
     if (!dateStr) return;
     setAvailLoading(true);
@@ -214,11 +213,10 @@ export function BookingModal() {
       setAvailability({
         closed: Boolean(data.closed),
         past: Boolean(data.past),
-        taken: Array.isArray(data.taken) ? data.taken : [],
       });
     } catch {
-      // Optimistic: show all slots open if the check fails; server still guards.
-      setAvailability({ closed: false, past: false, taken: [] });
+      // Optimistic: treat the day as open if the check fails; server still guards.
+      setAvailability({ closed: false, past: false });
     } finally {
       setAvailLoading(false);
     }
@@ -293,19 +291,6 @@ export function BookingModal() {
           message: doctorNote,
         }),
       });
-
-      if (res.status === 409) {
-        setSlot(null);
-        setCustomTime("");
-        void loadAvailability(date);
-        goTo(2);
-        toast({
-          variant: "destructive",
-          title: "That time was just booked",
-          description: "Someone grabbed it before you — please pick another time.",
-        });
-        return;
-      }
 
       const data = (await res.json().catch(() => null)) as
         | { ok?: boolean; appointment?: ConfirmedAppointment; error?: string }
@@ -639,26 +624,11 @@ export function BookingModal() {
                         />
                       </SelectTrigger>
                       <SelectContent className="max-h-64 rounded-2xl">
-                        {TIME_SLOTS.map((s) => {
-                          const taken = availability?.taken.includes(s) ?? false;
-                          return (
-                            <SelectItem
-                              key={s}
-                              value={s}
-                              disabled={taken}
-                              className="rounded-xl"
-                            >
-                              <span className="flex items-center gap-2">
-                                {s}
-                                {taken && (
-                                  <span className="text-[11px] font-medium text-muted-foreground/60">
-                                    · booked
-                                  </span>
-                                )}
-                              </span>
-                            </SelectItem>
-                          );
-                        })}
+                        {TIME_SLOTS.map((s) => (
+                          <SelectItem key={s} value={s} className="rounded-xl">
+                            {s}
+                          </SelectItem>
+                        ))}
                         <SelectSeparator />
                         <SelectItem value={CUSTOM_SLOT} className="rounded-xl">
                           <span className="flex items-center gap-2 font-medium text-primary">
@@ -734,9 +704,8 @@ export function BookingModal() {
                   {date && availability && !availLoading && !availability.closed && !availability.past && (
                     <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
                       <Check className="size-3.5 text-green-600" aria-hidden />
-                      {availability.taken.length >= TIME_SLOTS.length
-                        ? "All standard slots are booked for this day — you can still write a custom time."
-                        : "Booked times are greyed out in the list."}
+                      All times stay open — several patients can share the same
+                      time, you&apos;ll get your token on arrival.
                     </p>
                   )}
 
@@ -746,7 +715,6 @@ export function BookingModal() {
                       !date ||
                       !effectiveSlot ||
                       customOutOfRange ||
-                      slotTaken ||
                       Boolean(availability?.closed || availability?.past) ||
                       availLoading
                     }
