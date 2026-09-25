@@ -2,15 +2,12 @@
 
 import {
   ArrowUpRight,
-  CalendarCheck,
   MapPin,
   MessageCircle,
   Phone,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Reveal } from "@/components/clinic/reveal";
 import { scrollToSection } from "@/components/clinic/scroll";
-import { useClinicStore } from "@/components/clinic/store";
 import { CLINIC } from "@/lib/clinic";
 
 const LINKS = [
@@ -33,11 +30,9 @@ const ICON_CHIP =
 /**
  * Footer — a clean light-theme close that matches the site's warm ivory
  * palette: crimson ribbon hairline, soft blush glows, a giant italic
- * "beautiful smiles." watermark, a large brand mark and a one-tap booking
- * button.
+ * "beautiful smiles." watermark and the brand mark.
  */
 export function Footer() {
-  const openBooking = useClinicStore((s) => s.openBooking);
 
   return (
     <footer className="relative mt-auto overflow-hidden bg-card text-foreground">
@@ -73,13 +68,13 @@ export function Footer() {
               <img
                 src="/logo.png"
                 alt="Punjab Dental Surgery logo"
-                className="size-20 drop-shadow-[0_10px_24px_rgba(18,88,143,0.22)] sm:size-24"
+                className="h-auto w-24 drop-shadow-[0_10px_24px_rgba(18,88,143,0.22)] sm:w-32"
               />
               <p className="mt-5 max-w-sm text-sm leading-relaxed text-muted-foreground">
                 Gentle, honest and painless dentistry for your whole family — from
                 routine checkups to braces and implants.
               </p>
-              <p dir="rtl" lang="ur" className="mt-3 text-sm text-primary/80">
+              <p dir="rtl" lang="ur" className="mt-3 text-left text-sm text-primary/80">
                 {CLINIC.taglineUr}
               </p>
             </div>
@@ -161,19 +156,6 @@ export function Footer() {
             </div>
           </Reveal>
         </div>
-
-        {/* One-tap booking */}
-        <Reveal delay={0.08}>
-          <div className="mt-12 flex justify-center">
-            <Button
-              onClick={() => openBooking()}
-              className="h-12 w-full rounded-full bg-primary px-8 text-[15px] font-semibold shadow-[0_10px_30px_rgb(18,88,143,0.3)] hover:bg-primary/90 sm:w-auto"
-            >
-              <CalendarCheck className="size-5" aria-hidden />
-              Book Appointment
-            </Button>
-          </div>
-        </Reveal>
 
         {/* Bottom bar */}
         <div className="mt-12 flex flex-col gap-2 border-t border-border/80 pt-6 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">

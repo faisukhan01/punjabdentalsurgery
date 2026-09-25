@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { ChevronLeft, ChevronRight, Quote, Star } from "lucide-react";
 import { Reveal, SectionHeading } from "@/components/clinic/reveal";
@@ -63,13 +63,15 @@ const ARROW_BTN =
   "inline-flex size-11 shrink-0 items-center justify-center rounded-full border border-primary/15 bg-card text-primary shadow-[0_6px_16px_rgb(18,88,143,0.12)] transition-all hover:bg-primary hover:text-primary-foreground active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
 
 /**
- * Reviews — one elegant testimonial card at a time. Patients step through
- * with the left / right arrow buttons (side arrows on desktop, thumb-friendly
- * arrows around the dots on mobile) or jump straight to a review via the
- * dots. Slides glide in the direction of travel; honors reduced motion.
+ * Reviews — one elegant testimonial card at a time. The carousel glides to
+ * the next review every ~5 seconds on its own (pausing while the visitor is
+ * hovering it), and patients can also step with the left / right arrow
+ * buttons (side arrows on desktop, thumb-friendly arrows around the dots on
+ * mobile) or jump straight to a review via the dots. Honors reduced motion.
  */
 export function Reviews() {
   const [[index, direction], setIndex] = useState<[number, number]>([0, 0]);
+  const [paused, setPaused] = useState(false);
 
   const go = useCallback((dir: number) => {
     setIndex(([i]) => [(i + dir + REVIEWS.length) % REVIEWS.length, dir]);
@@ -82,6 +84,16 @@ export function Reviews() {
     },
     [index]
   );
+
+  // Gentle auto-advance — one review every 5 seconds, paused on hover so
+  // visitors can read or click through without the card sliding away.
+  useEffect(() => {
+    if (paused) return;
+    const t = setInterval(() => {
+      setIndex(([i]) => [(i + 1) % REVIEWS.length, 1]);
+    }, 5000);
+    return () => clearInterval(t);
+  }, [paused]);
 
   const review = REVIEWS[index];
 
@@ -106,7 +118,11 @@ export function Reviews() {
         </Reveal>
 
         <Reveal delay={0.15} className="mt-12">
-          <div className="relative mx-auto max-w-3xl">
+          <div
+            className="relative mx-auto max-w-3xl"
+            onMouseEnter={() => setPaused(true)}
+            onMouseLeave={() => setPaused(false)}
+          >
             {/* Desktop arrows — in the gutters beside the card */}
             <button
               type="button"

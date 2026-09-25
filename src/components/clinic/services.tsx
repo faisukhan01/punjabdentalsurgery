@@ -39,14 +39,6 @@ const FEATURED = [
   },
 ] as const;
 
-const OTHERS = [
-  SERVICE_NAMES[2], // Tooth Filling
-  SERVICE_NAMES[4], // Tooth Extraction
-  SERVICE_NAMES[7], // Dental Implants
-  SERVICE_NAMES[8], // Crown & Bridge
-  SERVICE_NAMES[10], // Emergency Dental Care
-] as const;
-
 export function Services() {
   const openBooking = useClinicStore((s) => s.openBooking);
 
@@ -87,8 +79,16 @@ export function Services() {
         </div>
 
         <Reveal delay={0.15}>
-          <p className="mt-8 text-center text-sm text-muted-foreground">
-            Also offering: {OTHERS.join(" · ")}.
+          <p className="mt-8 text-center text-sm leading-relaxed text-muted-foreground">
+            Also offering many more treatments —{" "}
+            <button
+              type="button"
+              onClick={() => openBooking()}
+              className="inline-flex items-center gap-1 font-semibold text-primary underline-offset-4 transition-colors hover:underline"
+            >
+              book an appointment for a free consultation
+              <ArrowRight className="size-4" aria-hidden />
+            </button>
           </p>
         </Reveal>
       </div>
