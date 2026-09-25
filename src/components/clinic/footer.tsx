@@ -9,6 +9,7 @@ import { Reveal } from "@/components/clinic/reveal";
 import { scrollToSection } from "@/components/clinic/scroll";
 import { WhatsAppIcon } from "@/components/clinic/whatsapp-icon";
 import { CLINIC } from "@/lib/clinic";
+import { handleWhatsAppClick } from "@/lib/whatsapp";
 
 const LINKS = [
   { label: "Services", id: "services" },
@@ -129,6 +130,7 @@ export function Footer() {
                     href={CLINIC.whatsapp}
                     target="_blank"
                     rel="noopener noreferrer"
+                    onClick={handleWhatsAppClick}
                     className="group flex items-center gap-3 text-foreground/75 transition-colors hover:text-primary"
                   >
                     <span className={WA_CHIP}>

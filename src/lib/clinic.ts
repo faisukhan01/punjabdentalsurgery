@@ -9,6 +9,7 @@ export const CLINIC = {
   taglineUr: "آپ کی مسکراہٹ، ہماری ذمہ داری",
   phone: "+92 333 4313672",
   phoneHref: "tel:+923334313672",
+  whatsappNumber: "923334313672",
   whatsapp: "https://wa.me/923334313672",
   address: "Johar Town, Lahore",
   email: "info@punjabdentalsurgery.com",

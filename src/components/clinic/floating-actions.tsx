@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useClinicStore } from "@/components/clinic/store";
 import { WhatsAppIcon } from "@/components/clinic/whatsapp-icon";
 import { CLINIC } from "@/lib/clinic";
+import { handleWhatsAppClick } from "@/lib/whatsapp";
 
 /**
  * Floating contact actions.
@@ -48,6 +49,7 @@ export function FloatingActions() {
         href={CLINIC.whatsapp}
         target="_blank"
         rel="noopener noreferrer"
+        onClick={handleWhatsAppClick}
         aria-label="Chat with us on WhatsApp"
         initial={false}
         animate={{

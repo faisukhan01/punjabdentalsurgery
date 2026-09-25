@@ -70,20 +70,26 @@ const ARROW_BTN =
  * mobile) or jump straight to a review via the dots.
  */
 export function Reviews() {
-  const [[index, direction], setIndex] = useState<[number, number]>([0, 0]);
+  // [active index, previous index, direction] — prev + direction drive the
+  // slide-out of the old card while the new one slides in.
+  const [[index, prev, direction], setTransition] = useState<[
+    number,
+    number,
+    number
+  ]>([0, 0, 0]);
   // Bumped after every manual arrow / dot tap so the 5s countdown restarts
   // and the card never double-jumps right after the patient steps manually.
   const [cycle, setCycle] = useState(0);
 
   const go = useCallback((dir: number) => {
-    setIndex(([i]) => [(i + dir + REVIEWS.length) % REVIEWS.length, dir]);
+    setTransition(([i]) => [(i + dir + REVIEWS.length) % REVIEWS.length, i, dir]);
     setCycle((c) => c + 1);
   }, []);
 
   const goTo = useCallback(
     (target: number) => {
       if (target === index) return;
-      setIndex(() => [target, target > index ? 1 : -1]);
+      setTransition(([i]) => [target, i, target > i ? 1 : -1]);
       setCycle((c) => c + 1);
     },
     [index]
@@ -94,12 +100,10 @@ export function Reviews() {
   // desktop and touch devices before), manual taps just restart the timer.
   useEffect(() => {
     const t = setInterval(() => {
-      setIndex(([i]) => [(i + 1) % REVIEWS.length, 1]);
+      setTransition(([i]) => [(i + 1) % REVIEWS.length, i, 1]);
     }, 5000);
     return () => clearInterval(t);
   }, [cycle]);
-
-  const review = REVIEWS[index];
 
   return (
     <section id="reviews" className="scroll-mt-20 py-20 sm:py-28">
@@ -141,56 +145,76 @@ export function Reviews() {
               <ChevronRight className="size-5" aria-hidden />
             </button>
 
-            {/* The card */}
-            <div className="mx-auto max-w-2xl sm:px-16" aria-live="polite">
-              <motion.figure
-                key={index}
-                initial={{ opacity: 0, x: 40 * direction }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.38, ease: "easeOut" }}
-                className="relative flex min-h-[300px] flex-col overflow-hidden rounded-3xl border border-primary/10 bg-gradient-to-b from-card to-secondary/40 p-7 shadow-[0_20px_45px_-20px_rgba(18,88,143,0.3)] sm:min-h-[280px] sm:p-10"
-              >
-                <Quote
-                  aria-hidden
-                  className="pointer-events-none absolute -right-3 -top-4 size-32 rotate-12 text-primary/[0.06]"
-                />
-
-                <div className="flex items-center justify-between">
-                  <div
-                    className="flex gap-1 text-amber-500"
-                    aria-label="5 out of 5 stars"
-                    role="img"
+            {/* The cards — every review stays mounted in the same grid cell
+                (inactive ones invisible + inert) so the section's height is
+                always the tallest card: no reflow "shake" of the page between
+                slides, and overflow-x-clip stops the slide offset from
+                flashing a horizontal scrollbar on narrow screens. */}
+            <div
+              className="mx-auto grid max-w-2xl overflow-x-clip sm:px-16"
+              aria-live="polite"
+            >
+              {REVIEWS.map((r, i) => {
+                const active = i === index;
+                return (
+                  <motion.figure
+                    key={r.name}
+                    initial={false}
+                    animate={{
+                      opacity: active ? 1 : 0,
+                      x: active ? 0 : i === prev ? -40 * direction : 40 * direction,
+                    }}
+                    transition={{ duration: 0.38, ease: "easeOut" }}
+                    aria-hidden={!active}
+                    inert={!active}
+                    className={cn(
+                      "relative col-start-1 row-start-1 flex min-h-[300px] flex-col overflow-hidden rounded-3xl border border-primary/10 bg-gradient-to-b from-card to-secondary/40 p-7 shadow-[0_20px_45px_-20px_rgba(18,88,143,0.3)] sm:min-h-[280px] sm:p-10",
+                      !active && "pointer-events-none"
+                    )}
                   >
-                    {Array.from({ length: 5 }).map((_, s) => (
-                      <Star key={s} className="size-4 fill-current" aria-hidden />
-                    ))}
-                  </div>
-                  <span className="rounded-full bg-secondary px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-primary/80">
-                    {review.detail}
-                  </span>
-                </div>
+                    <Quote
+                      aria-hidden
+                      className="pointer-events-none absolute -right-3 -top-4 size-32 rotate-12 text-primary/[0.06]"
+                    />
 
-                <blockquote className="mt-6 flex-1 text-lg font-medium leading-relaxed text-foreground sm:text-xl sm:leading-relaxed">
-                  “{review.quote}”
-                </blockquote>
+                    <div className="flex items-center justify-between">
+                      <div
+                        className="flex gap-1 text-amber-500"
+                        aria-label="5 out of 5 stars"
+                        role="img"
+                      >
+                        {Array.from({ length: 5 }).map((_, s) => (
+                          <Star key={s} className="size-4 fill-current" aria-hidden />
+                        ))}
+                      </div>
+                      <span className="rounded-full bg-secondary px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-primary/80">
+                        {r.detail}
+                      </span>
+                    </div>
 
-                <figcaption className="mt-7 flex items-center gap-3.5 border-t border-primary/10 pt-5">
-                  <span
-                    className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-primary text-sm font-bold text-primary-foreground shadow-[0_6px_14px_rgb(18,88,143,0.3)]"
-                    aria-hidden
-                  >
-                    {initials(review.name)}
-                  </span>
-                  <span className="min-w-0">
-                    <span className="block text-[15px] font-semibold text-foreground">
-                      {review.name}
-                    </span>
-                    <span className="block text-xs text-muted-foreground">
-                      Verified patient
-                    </span>
-                  </span>
-                </figcaption>
-              </motion.figure>
+                    <blockquote className="mt-6 flex-1 text-lg font-medium leading-relaxed text-foreground sm:text-xl sm:leading-relaxed">
+                      “{r.quote}”
+                    </blockquote>
+
+                    <figcaption className="mt-7 flex items-center gap-3.5 border-t border-primary/10 pt-5">
+                      <span
+                        className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-primary text-sm font-bold text-primary-foreground shadow-[0_6px_14px_rgb(18,88,143,0.3)]"
+                        aria-hidden
+                      >
+                        {initials(r.name)}
+                      </span>
+                      <span className="min-w-0">
+                        <span className="block text-[15px] font-semibold text-foreground">
+                          {r.name}
+                        </span>
+                        <span className="block text-xs text-muted-foreground">
+                          Verified patient
+                        </span>
+                      </span>
+                    </figcaption>
+                  </motion.figure>
+                );
+              })}
             </div>
 
             {/* Controls — arrows flank the dots on mobile; dots only on desktop */}

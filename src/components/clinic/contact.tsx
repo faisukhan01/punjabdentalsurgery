@@ -6,6 +6,7 @@ import { Reveal, SectionHeading } from "@/components/clinic/reveal";
 import { useClinicStore } from "@/components/clinic/store";
 import { WhatsAppIcon } from "@/components/clinic/whatsapp-icon";
 import { CLINIC } from "@/lib/clinic";
+import { handleWhatsAppClick } from "@/lib/whatsapp";
 import { cn } from "@/lib/utils";
 
 const DETAILS = [
@@ -24,6 +25,7 @@ const DETAILS = [
     value: "Chat with the clinic",
     href: CLINIC.whatsapp,
     external: true,
+    isWhatsApp: true,
   },
   {
     icon: MapPin,
@@ -56,6 +58,7 @@ export function Contact() {
               <a
                 href={item.href}
                 {...(item.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                onClick={"isWhatsApp" in item ? handleWhatsAppClick : undefined}
                 className="flex h-full flex-col items-start gap-3 rounded-2xl border border-border/70 bg-card p-6 transition-colors hover:border-primary/40"
               >
                 <span
