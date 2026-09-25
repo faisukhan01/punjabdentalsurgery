@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import {
   ArrowUpRight,
   CalendarCheck,
@@ -12,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Reveal } from "@/components/clinic/reveal";
 import { scrollToSection } from "@/components/clinic/scroll";
 import { useClinicStore } from "@/components/clinic/store";
-import { CLINIC, getOpenStatus, type OpenStatus } from "@/lib/clinic";
+import { CLINIC } from "@/lib/clinic";
 
 const LINKS = [
   { label: "Services", id: "services" },
@@ -34,27 +33,11 @@ const ICON_CHIP =
 /**
  * Footer — a clean light-theme close that matches the site's warm ivory
  * palette: crimson ribbon hairline, soft blush glows, a giant italic
- * "beautiful smiles." watermark and a live open/closed status band with a
- * one-tap booking button.
+ * "beautiful smiles." watermark, a large brand mark and a one-tap booking
+ * button.
  */
 export function Footer() {
   const openBooking = useClinicStore((s) => s.openBooking);
-  // Live status computed after mount (Karachi clock) to avoid hydration mismatch.
-  const [status, setStatus] = useState<OpenStatus | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    const update = () => {
-      if (!cancelled) setStatus(getOpenStatus());
-    };
-    const initial = setTimeout(update, 0);
-    const t = setInterval(update, 60_000);
-    return () => {
-      cancelled = true;
-      clearTimeout(initial);
-      clearInterval(t);
-    };
-  }, []);
 
   return (
     <footer className="relative mt-auto overflow-hidden bg-card text-foreground">
@@ -87,22 +70,11 @@ export function Footer() {
           {/* Brand */}
           <Reveal className="md:col-span-2 lg:col-span-1">
             <div>
-              <div className="flex items-center gap-3">
-                <img
-                  src="/logo.png"
-                  alt=""
-                  aria-hidden
-                  className="size-12 drop-shadow-[0_6px_16px_rgba(18,88,143,0.18)]"
-                />
-                <div>
-                  <p className="font-display text-lg font-semibold leading-tight text-foreground">
-                    {CLINIC.name}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {CLINIC.doctor} · {CLINIC.qualifications}
-                  </p>
-                </div>
-              </div>
+              <img
+                src="/logo.png"
+                alt="Punjab Dental Surgery logo"
+                className="size-20 drop-shadow-[0_10px_24px_rgba(18,88,143,0.22)] sm:size-24"
+              />
               <p className="mt-5 max-w-sm text-sm leading-relaxed text-muted-foreground">
                 Gentle, honest and painless dentistry for your whole family — from
                 routine checkups to braces and implants.
@@ -190,30 +162,12 @@ export function Footer() {
           </Reveal>
         </div>
 
-        {/* Live hours band — status dot + one-tap booking */}
+        {/* One-tap booking */}
         <Reveal delay={0.08}>
-          <div className="mt-12 flex flex-col gap-5 rounded-3xl border border-primary/10 bg-secondary/50 p-5 sm:flex-row sm:items-center sm:justify-between sm:gap-6 sm:p-6">
-            <div className="min-w-0">
-              <p className="flex items-center gap-2.5 text-[15px] font-semibold text-foreground">
-                <span className="relative flex size-2 shrink-0" aria-hidden>
-                  {status?.open ? (
-                    <>
-                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-                      <span className="relative inline-flex size-2 rounded-full bg-emerald-400" />
-                    </>
-                  ) : (
-                    <span className="inline-flex size-2 rounded-full bg-foreground/30" />
-                  )}
-                </span>
-                {status ? status.label : "Open everyday"}
-              </p>
-              <p className="mt-1.5 pl-[18px] text-[13px] text-muted-foreground">
-                Everyday · 5:00 PM – 12:00 AM
-              </p>
-            </div>
+          <div className="mt-12 flex justify-center">
             <Button
               onClick={() => openBooking()}
-              className="h-11 w-full rounded-full bg-primary px-6 text-[15px] font-semibold shadow-[0_10px_30px_rgb(18,88,143,0.3)] hover:bg-primary/90 sm:w-auto sm:shrink-0"
+              className="h-12 w-full rounded-full bg-primary px-8 text-[15px] font-semibold shadow-[0_10px_30px_rgb(18,88,143,0.3)] hover:bg-primary/90 sm:w-auto"
             >
               <CalendarCheck className="size-5" aria-hidden />
               Book Appointment

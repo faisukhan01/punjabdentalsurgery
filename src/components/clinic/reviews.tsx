@@ -1,6 +1,8 @@
 "use client";
 
-import { Quote, Star } from "lucide-react";
+import { useCallback, useState } from "react";
+import { motion } from "framer-motion";
+import { ChevronLeft, ChevronRight, Quote, Star } from "lucide-react";
 import { Reveal, SectionHeading } from "@/components/clinic/reveal";
 import { cn } from "@/lib/utils";
 
@@ -57,47 +59,34 @@ function initials(name: string): string {
     .join("");
 }
 
-function ReviewCard({ review }: { review: Review }) {
-  return (
-    <figure className="flex w-[19rem] shrink-0 flex-col rounded-2xl border border-border/70 bg-card p-6 shadow-[0_2px_12px_rgb(88,18,24,0.05)] sm:w-[21.5rem]">
-      <div className="flex items-center justify-between">
-        <div className="flex gap-0.5 text-amber-500" aria-label="5 out of 5 stars" role="img">
-          {Array.from({ length: 5 }).map((_, s) => (
-            <Star key={s} className="size-4 fill-current" aria-hidden />
-          ))}
-        </div>
-        <Quote className="size-5 text-primary/20" aria-hidden />
-      </div>
-      <blockquote className="mt-4 flex-1 text-[15px] leading-relaxed text-foreground/85">
-        “{review.quote}”
-      </blockquote>
-      <figcaption className="mt-5 flex items-center gap-3 border-t border-border/60 pt-4">
-        <span
-          className="flex size-9 shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-bold text-secondary-foreground"
-          aria-hidden
-        >
-          {initials(review.name)}
-        </span>
-        <span className="min-w-0">
-          <span className="block truncate text-sm font-semibold text-foreground">
-            {review.name}
-          </span>
-          <span className="block truncate text-xs text-muted-foreground">{review.detail}</span>
-        </span>
-      </figcaption>
-    </figure>
-  );
-}
+const ARROW_BTN =
+  "inline-flex size-11 shrink-0 items-center justify-center rounded-full border border-primary/15 bg-card text-primary shadow-[0_6px_16px_rgb(18,88,143,0.12)] transition-all hover:bg-primary hover:text-primary-foreground active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
 
 /**
- * Reviews — an infinite, slow-drifting marquee of testimonial cards.
- * Pauses on hover, fades at the edges, honors reduced-motion.
+ * Reviews — one elegant testimonial card at a time. Patients step through
+ * with the left / right arrow buttons (side arrows on desktop, thumb-friendly
+ * arrows around the dots on mobile) or jump straight to a review via the
+ * dots. Slides glide in the direction of travel; honors reduced motion.
  */
 export function Reviews() {
-  const row = [...REVIEWS, ...REVIEWS]; // duplicated for a seamless -50% loop
+  const [[index, direction], setIndex] = useState<[number, number]>([0, 0]);
+
+  const go = useCallback((dir: number) => {
+    setIndex(([i]) => [(i + dir + REVIEWS.length) % REVIEWS.length, dir]);
+  }, []);
+
+  const goTo = useCallback(
+    (target: number) => {
+      if (target === index) return;
+      setIndex(() => [target, target > index ? 1 : -1]);
+    },
+    [index]
+  );
+
+  const review = REVIEWS[index];
 
   return (
-    <section id="reviews" className="scroll-mt-20 overflow-hidden py-20 sm:py-28">
+    <section id="reviews" className="scroll-mt-20 py-20 sm:py-28">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <SectionHeading
           kicker="Patient Reviews"
@@ -115,22 +104,121 @@ export function Reviews() {
             5.0 rated by patients
           </p>
         </Reveal>
-      </div>
 
-      <Reveal delay={0.15} className="mt-12">
-        <div
-          className={cn(
-            "marquee group relative",
-            "[mask-image:linear-gradient(to_right,transparent,black_7%,black_93%,transparent)]"
-          )}
-        >
-          <div className="animate-marquee flex w-max gap-4 pr-4 group-hover:[animation-play-state:paused]">
-            {row.map((review, i) => (
-              <ReviewCard key={`${review.name}-${i}`} review={review} />
-            ))}
+        <Reveal delay={0.15} className="mt-12">
+          <div className="relative mx-auto max-w-3xl">
+            {/* Desktop arrows — in the gutters beside the card */}
+            <button
+              type="button"
+              aria-label="Previous review"
+              onClick={() => go(-1)}
+              className={cn(ARROW_BTN, "absolute left-0 top-1/2 hidden -translate-y-1/2 sm:inline-flex")}
+            >
+              <ChevronLeft className="size-5" aria-hidden />
+            </button>
+            <button
+              type="button"
+              aria-label="Next review"
+              onClick={() => go(1)}
+              className={cn(ARROW_BTN, "absolute right-0 top-1/2 hidden -translate-y-1/2 sm:inline-flex")}
+            >
+              <ChevronRight className="size-5" aria-hidden />
+            </button>
+
+            {/* The card */}
+            <div className="mx-auto max-w-2xl sm:px-16" aria-live="polite">
+              <motion.figure
+                key={index}
+                initial={{ opacity: 0, x: 40 * direction }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.38, ease: "easeOut" }}
+                className="relative flex min-h-[300px] flex-col overflow-hidden rounded-3xl border border-primary/10 bg-gradient-to-b from-card to-secondary/40 p-7 shadow-[0_20px_45px_-20px_rgba(18,88,143,0.3)] sm:min-h-[280px] sm:p-10"
+              >
+                <Quote
+                  aria-hidden
+                  className="pointer-events-none absolute -right-3 -top-4 size-32 rotate-12 text-primary/[0.06]"
+                />
+
+                <div className="flex items-center justify-between">
+                  <div
+                    className="flex gap-1 text-amber-500"
+                    aria-label="5 out of 5 stars"
+                    role="img"
+                  >
+                    {Array.from({ length: 5 }).map((_, s) => (
+                      <Star key={s} className="size-4 fill-current" aria-hidden />
+                    ))}
+                  </div>
+                  <span className="rounded-full bg-secondary px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-primary/80">
+                    {review.detail}
+                  </span>
+                </div>
+
+                <blockquote className="mt-6 flex-1 text-lg font-medium leading-relaxed text-foreground sm:text-xl sm:leading-relaxed">
+                  “{review.quote}”
+                </blockquote>
+
+                <figcaption className="mt-7 flex items-center gap-3.5 border-t border-primary/10 pt-5">
+                  <span
+                    className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-primary text-sm font-bold text-primary-foreground shadow-[0_6px_14px_rgb(18,88,143,0.3)]"
+                    aria-hidden
+                  >
+                    {initials(review.name)}
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block text-[15px] font-semibold text-foreground">
+                      {review.name}
+                    </span>
+                    <span className="block text-xs text-muted-foreground">
+                      Verified patient
+                    </span>
+                  </span>
+                </figcaption>
+              </motion.figure>
+            </div>
+
+            {/* Controls — arrows flank the dots on mobile; dots only on desktop */}
+            <div className="mt-7 flex items-center justify-center gap-4">
+              <button
+                type="button"
+                aria-label="Previous review"
+                onClick={() => go(-1)}
+                className={cn(ARROW_BTN, "sm:hidden")}
+              >
+                <ChevronLeft className="size-5" aria-hidden />
+              </button>
+
+              <div className="flex items-center gap-2" role="tablist" aria-label="Choose review">
+                {REVIEWS.map((r, i) => (
+                  <button
+                    key={r.name}
+                    type="button"
+                    role="tab"
+                    aria-selected={i === index}
+                    aria-label={`Review ${i + 1} of ${REVIEWS.length} — ${r.name}`}
+                    onClick={() => goTo(i)}
+                    className={cn(
+                      "h-2 rounded-full transition-all duration-300",
+                      i === index
+                        ? "w-7 bg-primary"
+                        : "w-2 bg-primary/20 hover:bg-primary/45"
+                    )}
+                  />
+                ))}
+              </div>
+
+              <button
+                type="button"
+                aria-label="Next review"
+                onClick={() => go(1)}
+                className={cn(ARROW_BTN, "sm:hidden")}
+              >
+                <ChevronRight className="size-5" aria-hidden />
+              </button>
+            </div>
           </div>
-        </div>
-      </Reveal>
+        </Reveal>
+      </div>
     </section>
   );
 }
