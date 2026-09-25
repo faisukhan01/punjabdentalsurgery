@@ -3,11 +3,11 @@
 import {
   ArrowUpRight,
   MapPin,
-  MessageCircle,
   Phone,
 } from "lucide-react";
 import { Reveal } from "@/components/clinic/reveal";
 import { scrollToSection } from "@/components/clinic/scroll";
+import { WhatsAppIcon } from "@/components/clinic/whatsapp-icon";
 import { CLINIC } from "@/lib/clinic";
 
 const LINKS = [
@@ -26,6 +26,10 @@ const COLUMN_HEAD =
 
 const ICON_CHIP =
   "flex size-9 shrink-0 items-center justify-center rounded-xl bg-secondary text-primary ring-1 ring-primary/10 transition-colors group-hover:bg-primary group-hover:text-primary-foreground";
+
+/** WhatsApp gets its own brand-green chip so the link is instantly recognizable. */
+const WA_CHIP =
+  "flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#25D366] text-white ring-1 ring-[#25D366]/40 transition-colors group-hover:bg-[#1fb857]";
 
 /**
  * Footer — a clean light-theme close that matches the site's warm ivory
@@ -127,8 +131,8 @@ export function Footer() {
                     rel="noopener noreferrer"
                     className="group flex items-center gap-3 text-foreground/75 transition-colors hover:text-primary"
                   >
-                    <span className={ICON_CHIP}>
-                      <MessageCircle className="size-4" aria-hidden />
+                    <span className={WA_CHIP}>
+                      <WhatsAppIcon className="size-4" aria-hidden />
                     </span>
                     <span className="inline-flex items-center gap-1 font-medium">
                       WhatsApp

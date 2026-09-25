@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { CalendarCheck, MessageCircle, Phone } from "lucide-react";
+import { CalendarCheck, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useClinicStore } from "@/components/clinic/store";
+import { WhatsAppIcon } from "@/components/clinic/whatsapp-icon";
 import { CLINIC } from "@/lib/clinic";
 
 /**
@@ -57,13 +58,13 @@ export function FloatingActions() {
         whileHover={{ scale: 1.06 }}
         whileTap={{ scale: 0.94 }}
         transition={{ type: "spring", stiffness: 280, damping: 28 }}
-        className="fixed right-4 z-40 flex size-13 items-center justify-center rounded-full bg-primary text-white shadow-[0_10px_28px_rgb(18,88,143,0.45)] md:size-14"
+        className="fixed right-4 z-40 flex size-13 items-center justify-center rounded-full bg-[#25D366] text-white shadow-[0_10px_28px_rgba(37,211,102,0.5)] md:size-14"
         style={{ pointerEvents: waVisible ? "auto" : "none" }}
         inert={!waVisible}
       >
-        <MessageCircle className="size-6 md:size-7" aria-hidden />
+        <WhatsAppIcon className="size-6 md:size-7" aria-hidden />
         {waVisible && (
-          <span className="absolute inset-0 -z-10 animate-ping rounded-full bg-primary/40 [animation-duration:2.5s]" />
+          <span className="absolute inset-0 -z-10 animate-ping rounded-full bg-[#25D366]/40 [animation-duration:2.5s]" />
         )}
       </motion.a>
 

@@ -63,37 +63,41 @@ const ARROW_BTN =
   "inline-flex size-11 shrink-0 items-center justify-center rounded-full border border-primary/15 bg-card text-primary shadow-[0_6px_16px_rgb(18,88,143,0.12)] transition-all hover:bg-primary hover:text-primary-foreground active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
 
 /**
- * Reviews — one elegant testimonial card at a time. The carousel glides to
- * the next review every ~5 seconds on its own (pausing while the visitor is
- * hovering it), and patients can also step with the left / right arrow
- * buttons (side arrows on desktop, thumb-friendly arrows around the dots on
- * mobile) or jump straight to a review via the dots. Honors reduced motion.
+ * Reviews — one elegant testimonial card at a time. The carousel always
+ * glides to the next review every 5 seconds on its own — no clicking
+ * needed — and patients can also step with the left / right arrow buttons
+ * (side arrows on desktop, thumb-friendly arrows around the dots on
+ * mobile) or jump straight to a review via the dots.
  */
 export function Reviews() {
   const [[index, direction], setIndex] = useState<[number, number]>([0, 0]);
-  const [paused, setPaused] = useState(false);
+  // Bumped after every manual arrow / dot tap so the 5s countdown restarts
+  // and the card never double-jumps right after the patient steps manually.
+  const [cycle, setCycle] = useState(0);
 
   const go = useCallback((dir: number) => {
     setIndex(([i]) => [(i + dir + REVIEWS.length) % REVIEWS.length, dir]);
+    setCycle((c) => c + 1);
   }, []);
 
   const goTo = useCallback(
     (target: number) => {
       if (target === index) return;
       setIndex(() => [target, target > index ? 1 : -1]);
+      setCycle((c) => c + 1);
     },
     [index]
   );
 
-  // Gentle auto-advance — one review every 5 seconds, paused on hover so
-  // visitors can read or click through without the card sliding away.
+  // Auto-advance — the next review glides in every 5 seconds, no clicking
+  // needed. Runs unconditionally (a paused-on-hover state froze the loop on
+  // desktop and touch devices before), manual taps just restart the timer.
   useEffect(() => {
-    if (paused) return;
     const t = setInterval(() => {
       setIndex(([i]) => [(i + 1) % REVIEWS.length, 1]);
     }, 5000);
     return () => clearInterval(t);
-  }, [paused]);
+  }, [cycle]);
 
   const review = REVIEWS[index];
 
@@ -118,11 +122,7 @@ export function Reviews() {
         </Reveal>
 
         <Reveal delay={0.15} className="mt-12">
-          <div
-            className="relative mx-auto max-w-3xl"
-            onMouseEnter={() => setPaused(true)}
-            onMouseLeave={() => setPaused(false)}
-          >
+          <div className="relative mx-auto max-w-3xl">
             {/* Desktop arrows — in the gutters beside the card */}
             <button
               type="button"

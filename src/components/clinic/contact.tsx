@@ -1,20 +1,25 @@
 "use client";
 
-import { CalendarCheck, MapPin, MessageCircle, Phone } from "lucide-react";
+import { CalendarCheck, MapPin, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Reveal, SectionHeading } from "@/components/clinic/reveal";
 import { useClinicStore } from "@/components/clinic/store";
+import { WhatsAppIcon } from "@/components/clinic/whatsapp-icon";
 import { CLINIC } from "@/lib/clinic";
+import { cn } from "@/lib/utils";
 
 const DETAILS = [
   {
     icon: Phone,
+    chip: "bg-secondary text-primary",
     label: "Call us",
     value: CLINIC.phone,
     href: CLINIC.phoneHref,
+    external: false,
   },
   {
-    icon: MessageCircle,
+    icon: WhatsAppIcon,
+    chip: "bg-[#25D366] text-white",
     label: "WhatsApp",
     value: "Chat with the clinic",
     href: CLINIC.whatsapp,
@@ -22,6 +27,7 @@ const DETAILS = [
   },
   {
     icon: MapPin,
+    chip: "bg-secondary text-primary",
     label: "Visit us",
     value: CLINIC.address,
     href: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
@@ -52,7 +58,12 @@ export function Contact() {
                 {...(item.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
                 className="flex h-full flex-col items-start gap-3 rounded-2xl border border-border/70 bg-card p-6 transition-colors hover:border-primary/40"
               >
-                <span className="flex size-11 items-center justify-center rounded-xl bg-secondary text-primary">
+                <span
+                  className={cn(
+                    "flex size-11 items-center justify-center rounded-xl",
+                    item.chip
+                  )}
+                >
                   <item.icon className="size-5" aria-hidden />
                 </span>
                 <span className="text-sm font-medium text-muted-foreground">{item.label}</span>
