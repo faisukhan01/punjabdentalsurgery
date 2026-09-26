@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Reveal, SectionHeading } from "@/components/clinic/reveal";
 import { useClinicStore } from "@/components/clinic/store";
 import { WhatsAppIcon } from "@/components/clinic/whatsapp-icon";
-import { CLINIC } from "@/lib/clinic";
+import { CLINIC, MAPS_URL } from "@/lib/clinic";
 import { handleWhatsAppClick } from "@/lib/whatsapp";
 import { cn } from "@/lib/utils";
 
@@ -32,9 +32,7 @@ const DETAILS = [
     chip: "bg-secondary text-primary",
     label: "Visit us",
     value: CLINIC.address,
-    href: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-      `${CLINIC.name} ${CLINIC.address}`
-    )}`,
+    href: MAPS_URL,
     external: true,
   },
 ] as const;

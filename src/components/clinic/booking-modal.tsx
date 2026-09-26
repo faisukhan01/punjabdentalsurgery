@@ -882,6 +882,19 @@ export function BookingModal() {
                     No advance payment — you pay at the clinic after your visit.
                   </p>
 
+                  <p className="text-xs leading-relaxed text-muted-foreground">
+                    By booking you agree to our{" "}
+                    <a
+                      href="/privacy"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-medium text-primary underline-offset-4 hover:underline"
+                    >
+                      Privacy Policy
+                    </a>{" "}
+                    — your details are used only to manage your appointment.
+                  </p>
+
                   {submitError && (
                     <div
                       role="alert"

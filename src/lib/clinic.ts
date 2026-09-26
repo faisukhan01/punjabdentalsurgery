@@ -13,9 +13,18 @@ export const CLINIC = {
   whatsapp: "https://wa.me/923334313672",
   address: "Johar Town, Lahore",
   email: "info@punjabdentalsurgery.com",
+  // Canonical site URL (metadataBase, canonical tags, JSON-LD, sitemap).
+  website: "https://punjabdentalsurgery.vercel.app",
   // Open every day, evening shift only (5 PM – midnight).
   hours: [{ days: "Everyday", time: "5:00 PM – 12:00 AM" }],
 } as const;
+
+/** Google Maps link. TODO(owner): replace with the verified Google Business
+ *  Profile / place URL once available — the search-style link is the honest
+ *  fallback until then. */
+export const MAPS_URL = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+  `${CLINIC.name} ${CLINIC.address}`
+)}`;
 
 // Bookable time slots (must match clinic hours above).
 export const TIME_SLOTS = [

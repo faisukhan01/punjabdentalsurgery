@@ -24,16 +24,17 @@ const NAV_LINKS = [
 /**
  * Navbar — fixed over the hero video: transparent with white text at the
  * top of the page, turning into a solid porcelain bar once scrolled.
+ * Subpages (service pages, privacy) pass `solid` so the bar is always solid.
  */
-export function Navbar() {
+export function Navbar({ solid = false }: { solid?: boolean }) {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
+  const [scrolled, setScrolled] = useState(solid);
   const openBooking = useClinicStore((s) => s.openBooking);
 
   useEffect(() => {
     let cancelled = false;
     const onScroll = () => {
-      if (!cancelled) setScrolled(window.scrollY > 32);
+      if (!cancelled) setScrolled(solid || window.scrollY > 32);
     };
     // Deferred initial check — avoids synchronous setState in the effect body.
     const initial = setTimeout(onScroll, 0);
@@ -77,6 +78,8 @@ export function Navbar() {
           <img
             src="/logo.png"
             alt="Punjab Dental Surgery"
+            width={960}
+            height={766}
             className={cn(
               "w-auto shrink-0 transition-all duration-300",
               scrolled

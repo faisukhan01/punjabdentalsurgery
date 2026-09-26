@@ -89,6 +89,16 @@ export function FloatingActions() {
             Book Appointment
           </Button>
           <a
+            href={CLINIC.whatsapp}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={handleWhatsAppClick}
+            aria-label="Chat with us on WhatsApp"
+            className="flex size-11 shrink-0 items-center justify-center rounded-full bg-[#25D366] text-white shadow-[0_8px_22px_rgba(37,211,102,0.45)] transition-transform active:scale-95"
+          >
+            <WhatsAppIcon className="size-5" aria-hidden />
+          </a>
+          <a
             href={CLINIC.phoneHref}
             aria-label="Call the clinic now"
             className="flex size-11 shrink-0 items-center justify-center rounded-full border border-primary/30 bg-secondary text-primary transition-transform active:scale-95"

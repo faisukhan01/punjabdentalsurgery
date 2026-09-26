@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { ChevronLeft, ChevronRight, Quote, Star } from "lucide-react";
+import { ChevronLeft, ChevronRight, Quote } from "lucide-react";
 import { Reveal, SectionHeading } from "@/components/clinic/reveal";
 import { cn } from "@/lib/utils";
 
@@ -15,7 +15,7 @@ interface Review {
 const REVIEWS: Review[] = [
   {
     quote:
-      "Very gentle treatment and clear explanation of everything. My root canal was completely painless.",
+      "Very gentle treatment and clear explanation of everything. My root canal was much easier than I had feared.",
     name: "Ahmed Raza",
     detail: "Root Canal Treatment",
   },
@@ -111,17 +111,13 @@ export function Reviews() {
         <SectionHeading
           kicker="Patient Reviews"
           title="Trusted by families like yours"
-          subtitle="Real words from real patients — gentle treatment, honest pricing and smiles that last."
+          subtitle="Gentle treatment, honest pricing and smiles that last — in our patients' words."
         />
 
         <Reveal delay={0.1} className="mt-7 flex justify-center">
           <p className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-card px-4 py-1.5 text-xs font-semibold text-foreground/80 shadow-sm">
-            <span className="flex gap-0.5 text-amber-500" aria-hidden>
-              {Array.from({ length: 5 }).map((_, s) => (
-                <Star key={s} className="size-3.5 fill-current" />
-              ))}
-            </span>
-            5.0 rated by patients
+            <Quote className="size-3.5 text-primary" aria-hidden />
+            Real feedback from our patients
           </p>
         </Reveal>
 
@@ -177,16 +173,10 @@ export function Reviews() {
                       className="pointer-events-none absolute -right-3 -top-4 size-32 rotate-12 text-primary/[0.06]"
                     />
 
-                    <div className="flex items-center justify-between">
-                      <div
-                        className="flex gap-1 text-amber-500"
-                        aria-label="5 out of 5 stars"
-                        role="img"
-                      >
-                        {Array.from({ length: 5 }).map((_, s) => (
-                          <Star key={s} className="size-4 fill-current" aria-hidden />
-                        ))}
-                      </div>
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
+                        Patient feedback
+                      </span>
                       <span className="rounded-full bg-secondary px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-primary/80">
                         {r.detail}
                       </span>
@@ -208,7 +198,7 @@ export function Reviews() {
                           {r.name}
                         </span>
                         <span className="block text-xs text-muted-foreground">
-                          Verified patient
+                          Johar Town, Lahore
                         </span>
                       </span>
                     </figcaption>

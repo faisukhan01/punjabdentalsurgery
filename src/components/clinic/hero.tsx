@@ -105,17 +105,24 @@ export function Hero() {
           variants={item}
           className="mx-auto mt-4 max-w-3xl font-display text-[2.6rem] font-semibold leading-[1.12] text-balance text-white [text-shadow:0_2px_28px_rgba(0,0,0,0.5)] sm:mx-0 sm:mt-5 sm:text-6xl sm:leading-[1.08] lg:text-[4.25rem]"
         >
+          Dental Clinic in{" "}
           <span className="bg-gradient-to-br from-[#d6ecff] via-[#9ed2ff] to-[#54a8ef] bg-clip-text text-transparent drop-shadow-[0_2px_16px_rgba(0,0,0,0.45)]">
-            Happy smiles
-          </span>{" "}
-          start with gentle care.
+            Johar Town, Lahore
+          </span>
         </motion.h1>
 
         <motion.p
           variants={item}
-          className="mx-auto mt-5 max-w-md text-[15px] leading-relaxed text-white/85 sm:mx-0 sm:max-w-lg sm:text-lg"
+          className="mx-auto mt-4 max-w-xl font-display text-xl font-medium text-white/95 [text-shadow:0_2px_20px_rgba(0,0,0,0.45)] sm:mx-0 sm:text-2xl"
         >
-          Gentle, painless dentistry for your whole family — because every
+          Happy smiles start with gentle care.
+        </motion.p>
+
+        <motion.p
+          variants={item}
+          className="mx-auto mt-4 max-w-md text-[15px] leading-relaxed text-white/85 sm:mx-0 sm:max-w-lg sm:text-lg"
+        >
+          Gentle, comfort-first dentistry for your whole family — because every
           visit should end in a smile.
         </motion.p>
 
